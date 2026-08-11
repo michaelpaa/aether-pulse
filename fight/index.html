@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#140810" />
+  <title>IRON FIST</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <a class="back" href="../">← ARENA</a>
+  <div id="app">
+    <canvas id="game"></canvas>
+    <div id="hud" class="hidden">
+      <div class="hp-row">
+        <div class="fighter p1">
+          <div class="name">YOU</div>
+          <div class="bar"><i id="hp1"></i></div>
+          <div class="rounds" id="rounds1"></div>
+        </div>
+        <div class="center">
+          <div id="timer" class="timer">60</div>
+          <div id="announce" class="announce"></div>
+        </div>
+        <div class="fighter p2">
+          <div class="name">RAGE</div>
+          <div class="bar"><i id="hp2"></i></div>
+          <div class="rounds" id="rounds2"></div>
+        </div>
+      </div>
+    </div>
+    <div id="overlay" class="overlay">
+      <div class="brand">IRON FIST</div>
+      <p class="tagline">Best of 3. Punish. Don't get greedy.</p>
+      <div class="menu" id="menu">
+        <button id="btn-start" class="cta">FIGHT</button>
+        <p class="hint">A/D bewegen · W springen · J Punch · K Kick · L Special · S Block</p>
+        <p class="hint mobile-hint">Buttons unten: bewegen / angreifen / special</p>
+      </div>
+      <div class="menu hidden" id="results">
+        <div id="result-title" class="result-title">K.O.</div>
+        <button id="btn-retry" class="cta">REMATCH</button>
+      </div>
+    </div>
+    <div id="touch" class="touch hidden">
+      <div class="col">
+        <button data-act="left">←</button>
+        <button data-act="right">→</button>
+        <button data-act="jump">JMP</button>
+      </div>
+      <div class="col">
+        <button data-act="block">BLK</button>
+        <button data-act="punch">P</button>
+        <button data-act="kick">K</button>
+        <button data-act="special">SP</button>
+      </div>
+    </div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>

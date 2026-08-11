@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#05070d" />
+  <title>AETHER PULSE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <a class="back" href="../">← ARENA</a>
+  <div id="app">
+    <canvas id="game"></canvas>
+
+    <div id="hud" class="hidden">
+      <div class="hud-left">
+        <div class="stat"><span class="label">SCORE</span><span id="score">0</span></div>
+        <div class="stat"><span class="label">WAVE</span><span id="wave">1</span></div>
+      </div>
+      <div class="hud-center">
+        <div id="combo" class="combo">×1</div>
+      </div>
+      <div class="hud-right">
+        <div class="stat"><span class="label">BEST</span><span id="best">0</span></div>
+        <div class="bars">
+          <div class="bar"><i id="hp"></i></div>
+          <div class="bar energy"><i id="energy"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="overlay" class="overlay">
+      <div class="brand">AETHER PULSE</div>
+      <p class="tagline">Orbit. Strike. Survive the void.</p>
+      <div class="menu" id="menu">
+        <button id="btn-start" class="cta">ENGAGE</button>
+        <p class="hint">WASD / Pfeile bewegen · Maus zielen · Klick / Leertaste schießen · Shift Puls</p>
+        <p class="hint mobile-hint">Touch: Joystick links · Zielen & Schießen rechts · Doppel-Tap Puls</p>
+      </div>
+      <div class="menu hidden" id="gameover">
+        <div class="over-title">SIGNAL LOST</div>
+        <div class="over-score">Score <span id="final-score">0</span></div>
+        <div class="over-meta">Wave <span id="final-wave">1</span> · Combo Max <span id="final-combo">×1</span></div>
+        <button id="btn-retry" class="cta">REBOOT</button>
+      </div>
+    </div>
+
+    <div id="toast"></div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>

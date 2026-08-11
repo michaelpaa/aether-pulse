@@ -50,6 +50,8 @@
     brake: false,
     drift: false,
     itemPressed: false,
+    fire: false,
+    firePressed: false,
     touchSteer: 0,
     touchAccel: 0,
     usingTouch: false,
@@ -59,8 +61,11 @@
   const particles = [];
   const bananas = [];
   const shells = [];
+  const shots = [];
   const itemBoxes = [];
   const sparks = [];
+  const hitMeterEl = document.getElementById("hit-meter");
+  let lastHitTarget = null;
 
   // Track centerline (closed loop), world units
   const track = {
@@ -141,6 +146,10 @@
     else if (name === "finish") {
       safeBeep(400, 0.12, "triangle", 0.09, 120);
       safeBeep(600, 0.18, "sine", 0.08, 180);
+    } else if (name === "shot") safeBeep(780, 0.05, "square", 0.05, -240);
+    else if (name === "slow") {
+      safeBeep(160, 0.2, "sawtooth", 0.1, -50);
+      safeBeep(90, 0.25, "triangle", 0.08, -20);
     }
   }
 
@@ -302,6 +311,9 @@
       aiTargetS: 40 + id * 10,
       aiAggro: 0.55 + id * 0.06,
       smoke: 0,
+      hitsTaken: 0,
+      slowTimer: 0,
+      fireCd: 0,
     };
   }
 
@@ -314,8 +326,10 @@
     player = karts[0];
     bananas.length = 0;
     shells.length = 0;
+    shots.length = 0;
     particles.length = 0;
     sparks.length = 0;
+    lastHitTarget = null;
     for (const b of itemBoxes) b.taken = 0;
     raceTime = 0;
     countValue = 3;
@@ -364,6 +378,11 @@
         itemSlot.textContent = "?";
       }
     }
+    if (hitMeterEl) {
+      const t = lastHitTarget && !lastHitTarget.finished ? lastHitTarget : null;
+      if (t) hitMeterEl.textContent = t.name + " " + t.hitsTaken + "/10";
+      else hitMeterEl.textContent = "HITS 0/10";
+    }
   }
 
   function burst(x, y, color, n, spd) {
@@ -388,6 +407,38 @@
     if (kart.item || kart.itemSpin > 0) return;
     kart.itemSpin = 0.9;
     sfx("item");
+  }
+
+  function registerHit(target, fromId) {
+    if (!target || target.finished) return;
+    target.hitsTaken += 1;
+    lastHitTarget = target;
+    burst(target.x, target.y, "#ff4f8b", 10, 180);
+    sfx("hit");
+    if (target.hitsTaken >= 10) {
+      target.hitsTaken = 0;
+      target.slowTimer = Math.max(target.slowTimer, 4.5);
+      target.speed *= 0.45;
+      sfx("slow");
+      if (fromId === 0 || target.isPlayer) {
+        // toast via countdown reuse is heavy; use item label flash
+      }
+      if (hitMeterEl) hitMeterEl.textContent = target.name + " SLOW!";
+    }
+  }
+
+  function fireShot(kart) {
+    if (!kart || kart.finished || kart.stun > 0 || kart.fireCd > 0) return;
+    kart.fireCd = kart.isPlayer ? 0.22 : 0.45;
+    shots.push({
+      x: kart.x + Math.cos(kart.angle) * 26,
+      y: kart.y + Math.sin(kart.angle) * 26,
+      vx: Math.cos(kart.angle) * 520,
+      vy: Math.sin(kart.angle) * 520,
+      life: 1.1,
+      owner: kart.id,
+    });
+    sfx("shot");
   }
 
   function useItem(kart) {
@@ -519,6 +570,9 @@
       kart.speed *= 0.98;
       return;
     }
+    if (kart.fireCd > 0) kart.fireCd -= dt;
+    if (kart.slowTimer > 0) kart.slowTimer -= dt;
+
     if (kart.stun > 0) {
       kart.stun -= dt;
       kart.speed *= 0.96;
@@ -527,7 +581,8 @@
 
     const near = kart._near || nearestOnTrack(kart.x, kart.y);
     const onTrack = Math.abs(near.lat) <= track.halfW;
-    const maxSpeed = (onTrack ? 290 : 125) * (kart.boost > 0 ? 1.38 : 1);
+    const slowMul = kart.slowTimer > 0 ? 0.55 : 1;
+    const maxSpeed = (onTrack ? 290 : 125) * (kart.boost > 0 ? 1.38 : 1) * slowMul;
     const accel = onTrack ? 260 : 95;
     const brake = 340;
     const friction = onTrack ? 32 : 120;
@@ -619,6 +674,23 @@
       else if (kart.item === "shell" && kart.place > 1) useItem(kart);
       else if (kart.item === "banana" && Math.random() < 0.4) useItem(kart);
     }
+
+    // AI guns — shoot toward nearby rivals ahead/behind
+    if (Math.random() < dt * 0.7) {
+      for (const other of karts) {
+        if (other.id === kart.id || other.finished) continue;
+        const dx = other.x - kart.x;
+        const dy = other.y - kart.y;
+        const d = Math.hypot(dx, dy);
+        if (d < 220) {
+          const ang = Math.atan2(dy, dx);
+          if (Math.abs(angNorm(ang - kart.angle)) < 0.55) {
+            fireShot(kart);
+            break;
+          }
+        }
+      }
+    }
   }
 
   function updatePlayer(dt) {
@@ -636,6 +708,10 @@
     if (input.itemPressed) {
       input.itemPressed = false;
       useItem(player);
+    }
+    if (input.fire || input.firePressed) {
+      input.firePressed = false;
+      fireShot(player);
     }
   }
 
@@ -736,6 +812,24 @@
         }
       }
       if (hit || s.life <= 0) shells.splice(i, 1);
+    }
+
+    for (let i = shots.length - 1; i >= 0; i--) {
+      const sh = shots[i];
+      sh.life -= dt;
+      sh.x += sh.vx * dt;
+      sh.y += sh.vy * dt;
+      let dead = sh.life <= 0;
+      for (const k of karts) {
+        if (k.id === sh.owner || k.finished) continue;
+        if (Math.hypot(k.x - sh.x, k.y - sh.y) < 22) {
+          registerHit(k, sh.owner);
+          burst(sh.x, sh.y, "#b6ff3b", 8, 160);
+          dead = true;
+          break;
+        }
+      }
+      if (dead) shots.splice(i, 1);
     }
   }
 
@@ -894,6 +988,20 @@
       ctx.arc(0, 0, 26, 0, Math.PI * 2);
       ctx.stroke();
     }
+    if (k.slowTimer > 0) {
+      ctx.strokeStyle = "rgba(255,79,139,0.8)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, 0, 30, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    // hit pips
+    if (k.hitsTaken > 0) {
+      ctx.fillStyle = "#ff4f8b";
+      for (let i = 0; i < Math.min(10, k.hitsTaken); i++) {
+        ctx.fillRect(-18 + i * 4, -28, 3, 3);
+      }
+    }
     ctx.restore();
   }
 
@@ -1046,6 +1154,16 @@
       ctx.stroke();
     }
 
+    // gun shots
+    for (const sh of shots) {
+      ctx.save();
+      ctx.translate(sh.x, sh.y);
+      ctx.rotate(Math.atan2(sh.vy, sh.vx));
+      ctx.fillStyle = "#b6ff3b";
+      ctx.fillRect(-8, -2, 16, 4);
+      ctx.restore();
+    }
+
     // sparks / particles in world
     for (const s of sparks) {
       ctx.globalAlpha = Math.max(0, s.life * 2);
@@ -1193,6 +1311,12 @@
     } else if (k === " " || k === "Spacebar") {
       input.drift = down;
       if (down) e.preventDefault();
+    } else if (k === "e" || k === "E" || k === "f" || k === "F") {
+      input.fire = down;
+      if (down) {
+        input.firePressed = true;
+        e.preventDefault();
+      }
     } else if (k === "Shift") {
       if (down) {
         input.itemPressed = true;
@@ -1205,7 +1329,17 @@
   window.addEventListener("keydown", (e) => onKey(e, true));
   window.addEventListener("keyup", (e) => onKey(e, false));
   window.addEventListener("blur", () => {
-    input.left = input.right = input.accel = input.brake = input.drift = false;
+    input.left = input.right = input.accel = input.brake = input.drift = input.fire = false;
+  });
+
+  canvas.addEventListener("mousedown", (e) => {
+    if (e.button === 0) {
+      input.fire = true;
+      input.firePressed = true;
+    }
+  });
+  window.addEventListener("mouseup", (e) => {
+    if (e.button === 0) input.fire = false;
   });
 
   // Touch: left steer, right accel/brake, double tap item

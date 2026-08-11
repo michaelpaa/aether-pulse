@@ -1,19 +1,16 @@
-# NEON KART RUSH
+# ARENA TRIPLE
 
-Mario-Kart-style browser racer: drift, items, AI rivals, minimap, 3 laps.
+Three browser games, one GitHub Pages link — no server load.
 
 ## Play
 
-https://michaelpaa.github.io/aether-pulse/
+**https://michaelpaa.github.io/aether-pulse/**
 
-## Controls
+1. **AETHER PULSE** — neon arena shooter  
+2. **NEON KART** — drift racer with items + gun (10 hits = slow)  
+3. **IRON FIST** — Tekken-style best-of-3 fighter  
 
-- **A/D or ←/→** steer
-- **W/↑** accelerate
-- **S/↓** brake / reverse
-- **Space** drift (release for mini-boost)
-- **Shift** use item
+## Kart shooting
 
-## Items
-
-Boost, shell, banana, lightning — worse place gets better RNG.
+- **E** / **F** / mouse click — fire  
+- 10 hits on a rival → they get slowed hard for a few seconds  

@@ -2,53 +2,40 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <meta name="theme-color" content="#0b1020" />
-  <title>NEON KART RUSH</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#070b16" />
+  <title>ARENA TRIPLE — Pulse · Kart · Fight</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/hub.css" />
 </head>
 <body>
-  <div id="app">
-    <canvas id="game"></canvas>
+  <main class="hub">
+    <p class="eyebrow">PROMPT CONTEST PACK</p>
+    <h1>ARENA<br /><span>TRIPLE</span></h1>
+    <p class="lead">Drei Browser-Spiele. Ein Link. Kein Server-Stress.</p>
 
-    <div id="hud" class="hidden">
-      <div class="hud-top">
-        <div class="pos-block">
-          <div id="place" class="place">1<span>st</span></div>
-          <div class="lap-line">LAP <span id="lap">1</span>/<span id="laps">3</span></div>
-        </div>
-        <div class="timer-block">
-          <div id="timer" class="timer">0:00.000</div>
-          <div id="speed" class="speed">0 km/h</div>
-        </div>
-        <div class="item-block">
-          <div id="item-slot" class="item-slot empty">?</div>
-          <div class="item-label">ITEM</div>
-        </div>
-      </div>
-      <div id="countdown" class="countdown"></div>
-      <div id="minimap-wrap"><canvas id="minimap" width="140" height="140"></canvas></div>
+    <div class="grid">
+      <a class="card pulse" href="pulse/">
+        <span class="mode">01</span>
+        <h2>AETHER PULSE</h2>
+        <p>Neon-Arena-Shooter. Wellen, Combos, Pulse-Slowmo.</p>
+        <span class="go">PLAY</span>
+      </a>
+      <a class="card kart" href="kart/">
+        <span class="mode">02</span>
+        <h2>NEON KART</h2>
+        <p>Drift-Racer mit Items — und Bordkanone.</p>
+        <span class="go">RACE</span>
+      </a>
+      <a class="card fight" href="fight/">
+        <span class="mode">03</span>
+        <h2>IRON FIST</h2>
+        <p>Tekken-Style Duell. Combos, Specials, Best of 3.</p>
+        <span class="go">FIGHT</span>
+      </a>
     </div>
-
-    <div id="overlay" class="overlay">
-      <div class="brand">NEON KART</div>
-      <div class="brand-sub">RUSH</div>
-      <p class="tagline">Drift hard. Steal first. Never lift.</p>
-      <div class="menu" id="menu">
-        <button id="btn-start" class="cta">RACE</button>
-        <p class="hint">A/D oder ←/→ lenken · ↑/W Gas · ↓/S Bremse · Space Drift · Shift Item</p>
-        <p class="hint mobile-hint">Touch: links lenken · rechts Gas/Bremse · Doppel-Tap Item</p>
-      </div>
-      <div class="menu hidden" id="results">
-        <div id="result-title" class="result-title">FINISH</div>
-        <ol id="standings" class="standings"></ol>
-        <button id="btn-retry" class="cta">REMATCH</button>
-      </div>
-    </div>
-  </div>
-  <script src="js/game.js"></script>
+  </main>
 </body>
 </html>
