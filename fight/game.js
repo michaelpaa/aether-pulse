@@ -174,7 +174,15 @@
     menu.classList.add("hidden");
     results.classList.add("hidden");
     hud.classList.remove("hidden");
-    if ("ontouchstart" in window) touchUI.classList.remove("hidden");
+    if (isTouchUi()) touchUI.classList.remove("hidden");
+  }
+
+  function isTouchUi() {
+    return (
+      "ontouchstart" in window ||
+      (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) ||
+      Math.min(window.innerWidth, window.innerHeight) < 820
+    );
   }
 
   function startRound() {
@@ -745,11 +753,70 @@
   window.addEventListener("keydown", (e) => onKey(e, true));
   window.addEventListener("keyup", (e) => onKey(e, false));
 
-  touchUI.querySelectorAll("button").forEach((btn) => {
+  const joyMove = document.getElementById("joy-move");
+  const joyKnob = document.getElementById("joy-knob");
+
+  function setupJoystick(root, knob) {
+    if (!root || !knob) return;
+    let active = null;
+    const radius = 42;
+    const setKnob = (dx, dy) => {
+      knob.style.transform = "translate(" + dx + "px," + dy + "px)";
+    };
+    const handle = (clientX, clientY) => {
+      const rect = root.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      let dx = clientX - cx;
+      let dy = clientY - cy;
+      const d = Math.hypot(dx, dy) || 1;
+      const mag = Math.min(1, d / radius);
+      dx = (dx / d) * mag * radius;
+      dy = (dy / d) * mag * radius;
+      setKnob(dx, dy);
+      const nx = dx / radius;
+      input.left = nx < -0.25;
+      input.right = nx > 0.25;
+    };
+    root.addEventListener(
+      "touchstart",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        active = e.changedTouches[0].identifier;
+        handle(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+      },
+      { passive: false }
+    );
+    root.addEventListener(
+      "touchmove",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        for (const t of e.changedTouches) {
+          if (t.identifier === active) handle(t.clientX, t.clientY);
+        }
+      },
+      { passive: false }
+    );
+    const end = (e) => {
+      for (const t of e.changedTouches || []) {
+        if (t.identifier === active) active = null;
+      }
+      if (active == null) {
+        setKnob(0, 0);
+        input.left = false;
+        input.right = false;
+      }
+    };
+    root.addEventListener("touchend", end, { passive: false });
+    root.addEventListener("touchcancel", end, { passive: false });
+  }
+  setupJoystick(joyMove, joyKnob);
+
+  touchUI.querySelectorAll("button[data-act]").forEach((btn) => {
     const act = btn.getAttribute("data-act");
     const set = (down) => {
-      if (act === "left") input.left = down;
-      if (act === "right") input.right = down;
       if (act === "jump") {
         if (down && !input.jump) input.jumpPressed = true;
         input.jump = down;
@@ -768,14 +835,32 @@
         input.special = down;
       }
     };
-    btn.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-      set(true);
-    }, { passive: false });
-    btn.addEventListener("touchend", (e) => {
-      e.preventDefault();
-      set(false);
-    }, { passive: false });
+    btn.addEventListener(
+      "touchstart",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        set(true);
+      },
+      { passive: false }
+    );
+    btn.addEventListener(
+      "touchend",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        set(false);
+      },
+      { passive: false }
+    );
+    btn.addEventListener(
+      "touchcancel",
+      (e) => {
+        e.preventDefault();
+        set(false);
+      },
+      { passive: false }
+    );
     btn.addEventListener("mousedown", (e) => {
       e.preventDefault();
       set(true);
@@ -783,6 +868,21 @@
     btn.addEventListener("mouseup", () => set(false));
     btn.addEventListener("mouseleave", () => set(false));
   });
+
+  canvas.addEventListener(
+    "touchstart",
+    (e) => {
+      e.preventDefault();
+    },
+    { passive: false }
+  );
+  canvas.addEventListener(
+    "touchmove",
+    (e) => {
+      e.preventDefault();
+    },
+    { passive: false }
+  );
 
   btnStart.addEventListener("click", (e) => {
     e.preventDefault();

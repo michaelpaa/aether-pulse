@@ -69,6 +69,9 @@
     aimX: 0,
     aimY: 0,
     usingTouch: false,
+    autoAim: false,
+    moveX: 0,
+    moveY: 0,
   };
 
   const audio = { ctx: null, master: null };
@@ -511,10 +514,25 @@
       menu.classList.add("hidden");
       gameoverEl.classList.remove("hidden");
       hud.classList.add("hidden");
+      hideMobilePad();
     }, 650);
   }
 
   function aimPoint() {
+    if (input.autoAim && enemies.length) {
+      let best = null;
+      let bestD = Infinity;
+      for (let i = 0; i < enemies.length; i++) {
+        const e = enemies[i];
+        if (e.hp <= 0 || e.dead) continue;
+        const d = (e.x - player.x) * (e.x - player.x) + (e.y - player.y) * (e.y - player.y);
+        if (d < bestD) {
+          bestD = d;
+          best = e;
+        }
+      }
+      if (best) return { x: best.x, y: best.y };
+    }
     if (input.usingTouch && pointerIdAim != null) {
       return { x: input.aimX, y: input.aimY };
     }
@@ -528,7 +546,7 @@
     if (input.down) my += 1;
     if (input.left) mx -= 1;
     if (input.right) mx += 1;
-    if (input.usingTouch && pointerIdMove != null) {
+    if (input.moveX || input.moveY) {
       mx += input.moveX;
       my += input.moveY;
     }
@@ -1200,7 +1218,146 @@
     menu.classList.add("hidden");
     gameoverEl.classList.add("hidden");
     hud.classList.remove("hidden");
+    showMobilePad();
   }
+
+  function isTouchUi() {
+    return (
+      "ontouchstart" in window ||
+      (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) ||
+      Math.min(window.innerWidth, window.innerHeight) < 820
+    );
+  }
+
+  const mobilePad = document.getElementById("mobile-pad");
+  const joyMove = document.getElementById("joy-move");
+  const joyKnob = document.getElementById("joy-knob");
+  const btnShoot = document.getElementById("btn-shoot");
+  const btnPulse = document.getElementById("btn-pulse");
+
+  function showMobilePad() {
+    if (!mobilePad) return;
+    if (isTouchUi()) {
+      mobilePad.classList.remove("hidden");
+      input.usingTouch = true;
+      input.autoAim = true;
+    } else {
+      mobilePad.classList.add("hidden");
+    }
+  }
+  function hideMobilePad() {
+    if (mobilePad) mobilePad.classList.add("hidden");
+    input.moveX = 0;
+    input.moveY = 0;
+    input.shoot = false;
+  }
+
+  function bindHold(el, onDown, onUp) {
+    if (!el) return;
+    const down = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onDown();
+    };
+    const up = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onUp();
+    };
+    el.addEventListener("touchstart", down, { passive: false });
+    el.addEventListener("touchend", up, { passive: false });
+    el.addEventListener("touchcancel", up, { passive: false });
+    el.addEventListener("mousedown", down);
+    window.addEventListener("mouseup", up);
+  }
+
+  function setupJoystick(root, knob, onMove, onEnd) {
+    if (!root || !knob) return;
+    let active = null;
+    const radius = 40;
+    const setKnob = (dx, dy) => {
+      knob.style.transform = "translate(" + dx + "px," + dy + "px)";
+    };
+    const handle = (clientX, clientY) => {
+      const rect = root.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      let dx = clientX - cx;
+      let dy = clientY - cy;
+      const d = Math.hypot(dx, dy) || 1;
+      const mag = Math.min(1, d / radius);
+      dx = (dx / d) * mag * radius;
+      dy = (dy / d) * mag * radius;
+      setKnob(dx, dy);
+      onMove(dx / radius, dy / radius);
+    };
+    root.addEventListener(
+      "touchstart",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        active = e.changedTouches[0].identifier;
+        handle(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+      },
+      { passive: false }
+    );
+    root.addEventListener(
+      "touchmove",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        for (const t of e.changedTouches) {
+          if (t.identifier === active) handle(t.clientX, t.clientY);
+        }
+      },
+      { passive: false }
+    );
+    const end = (e) => {
+      for (const t of e.changedTouches || []) {
+        if (t.identifier === active) active = null;
+      }
+      if (active == null) {
+        setKnob(0, 0);
+        onEnd();
+      }
+    };
+    root.addEventListener("touchend", end, { passive: false });
+    root.addEventListener("touchcancel", end, { passive: false });
+  }
+
+  setupJoystick(
+    joyMove,
+    joyKnob,
+    (x, y) => {
+      input.moveX = x;
+      input.moveY = y;
+      input.usingTouch = true;
+      input.autoAim = true;
+    },
+    () => {
+      input.moveX = 0;
+      input.moveY = 0;
+    }
+  );
+
+  bindHold(
+    btnShoot,
+    () => {
+      input.shoot = true;
+      input.autoAim = true;
+      input.usingTouch = true;
+    },
+    () => {
+      input.shoot = false;
+    }
+  );
+  bindHold(
+    btnPulse,
+    () => {
+      input.pulsePressed = true;
+    },
+    () => {}
+  );
 
   function onKey(e, down) {
     const k = e.key;

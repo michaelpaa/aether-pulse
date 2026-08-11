@@ -2,7 +2,9 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#05070d" />
   <title>AETHER PULSE</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -38,7 +40,7 @@
       <div class="menu" id="menu">
         <button id="btn-start" class="cta">ENGAGE</button>
         <p class="hint">WASD / Pfeile bewegen · Maus zielen · Klick / Leertaste schießen · Shift Puls</p>
-        <p class="hint mobile-hint">Touch: Joystick links · Zielen & Schießen rechts · Doppel-Tap Puls</p>
+        <p class="hint mobile-hint">Joystick bewegen · FIRE schießen (Auto-Aim) · PULSE</p>
       </div>
       <div class="menu hidden" id="gameover">
         <div class="over-title">SIGNAL LOST</div>
@@ -63,6 +65,20 @@
         <li><kbd class="wide">Shift</kbd> Pulse</li>
       </ul>
     </aside>
+
+    <div id="mobile-pad" class="mobile-pad hidden" aria-label="Mobile Steuerung">
+      <div class="mp-left">
+        <div id="joy-move" class="joystick">
+          <div class="joy-base"></div>
+          <div id="joy-knob" class="joy-knob"></div>
+          <span class="joy-label">MOVE</span>
+        </div>
+      </div>
+      <div class="mp-right">
+        <button type="button" id="btn-pulse" class="mp-btn pulse">PULSE</button>
+        <button type="button" id="btn-shoot" class="mp-btn shoot">FIRE</button>
+      </div>
+    </div>
   </div>
   <script src="game.js"></script>
 </body>

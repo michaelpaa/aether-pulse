@@ -563,6 +563,7 @@
     results.classList.remove("hidden");
     hud.classList.add("hidden");
     countdownEl.classList.remove("show");
+    if (typeof hideMobilePad === "function") hideMobilePad();
   }
 
   function steerKart(kart, dt, steerInput, accelInput, brakeInput, driftHeld) {
@@ -1296,7 +1297,152 @@
     menu.classList.add("hidden");
     results.classList.add("hidden");
     hud.classList.remove("hidden");
+    showMobilePad();
   }
+
+  function finishRaceCleanupPad() {
+    hideMobilePad();
+  }
+
+  function isTouchUi() {
+    return (
+      "ontouchstart" in window ||
+      (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) ||
+      Math.min(window.innerWidth, window.innerHeight) < 820
+    );
+  }
+
+  const mobilePad = document.getElementById("mobile-pad");
+  const joySteer = document.getElementById("joy-steer");
+  const joyKnob = document.getElementById("joy-knob");
+  const btnGas = document.getElementById("btn-gas");
+  const btnBrake = document.getElementById("btn-brake");
+  const btnDrift = document.getElementById("btn-drift");
+  const btnShoot = document.getElementById("btn-shoot");
+  const btnItem = document.getElementById("btn-item");
+
+  function showMobilePad() {
+    if (!mobilePad) return;
+    if (isTouchUi()) {
+      mobilePad.classList.remove("hidden");
+      input.usingTouch = true;
+    } else mobilePad.classList.add("hidden");
+  }
+  function hideMobilePad() {
+    if (mobilePad) mobilePad.classList.add("hidden");
+    input.touchSteer = 0;
+    input.accel = false;
+    input.brake = false;
+    input.drift = false;
+    input.fire = false;
+  }
+
+  function bindHold(el, onDown, onUp) {
+    if (!el) return;
+    const down = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onDown();
+    };
+    const up = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onUp();
+    };
+    el.addEventListener("touchstart", down, { passive: false });
+    el.addEventListener("touchend", up, { passive: false });
+    el.addEventListener("touchcancel", up, { passive: false });
+    el.addEventListener("mousedown", down);
+    el.addEventListener("mouseup", up);
+    el.addEventListener("mouseleave", up);
+  }
+
+  function setupJoystick(root, knob, onMove, onEnd) {
+    if (!root || !knob) return;
+    let active = null;
+    const radius = 42;
+    const setKnob = (dx, dy) => {
+      knob.style.transform = "translate(" + dx + "px," + dy + "px)";
+    };
+    const handle = (clientX, clientY) => {
+      const rect = root.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      let dx = clientX - cx;
+      let dy = clientY - cy;
+      const d = Math.hypot(dx, dy) || 1;
+      const mag = Math.min(1, d / radius);
+      dx = (dx / d) * mag * radius;
+      dy = (dy / d) * mag * radius;
+      setKnob(dx, dy);
+      onMove(dx / radius, dy / radius);
+    };
+    root.addEventListener(
+      "touchstart",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        active = e.changedTouches[0].identifier;
+        handle(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+      },
+      { passive: false }
+    );
+    root.addEventListener(
+      "touchmove",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        for (const t of e.changedTouches) {
+          if (t.identifier === active) handle(t.clientX, t.clientY);
+        }
+      },
+      { passive: false }
+    );
+    const end = (e) => {
+      for (const t of e.changedTouches || []) {
+        if (t.identifier === active) active = null;
+      }
+      if (active == null) {
+        setKnob(0, 0);
+        onEnd();
+      }
+    };
+    root.addEventListener("touchend", end, { passive: false });
+    root.addEventListener("touchcancel", end, { passive: false });
+  }
+
+  setupJoystick(
+    joySteer,
+    joyKnob,
+    (x) => {
+      input.touchSteer = x;
+      input.usingTouch = true;
+    },
+    () => {
+      input.touchSteer = 0;
+    }
+  );
+
+  bindHold(btnGas, () => { input.accel = true; }, () => { input.accel = false; });
+  bindHold(btnBrake, () => { input.brake = true; }, () => { input.brake = false; });
+  bindHold(btnDrift, () => { input.drift = true; }, () => { input.drift = false; });
+  bindHold(
+    btnShoot,
+    () => {
+      input.fire = true;
+      input.firePressed = true;
+    },
+    () => {
+      input.fire = false;
+    }
+  );
+  bindHold(
+    btnItem,
+    () => {
+      input.itemPressed = true;
+    },
+    () => {}
+  );
 
   function onKey(e, down) {
     const k = e.key;
@@ -1342,29 +1488,11 @@
     if (e.button === 0) input.fire = false;
   });
 
-  // Touch: left steer, right accel/brake, double tap item
-  let pointerMove = null;
-  let pointerAccel = null;
-  let lastTap = 0;
+  // Prevent iOS page scroll while racing; controls live on #mobile-pad
   canvas.addEventListener(
     "touchstart",
     (e) => {
       e.preventDefault();
-      input.usingTouch = true;
-      const now = performance.now();
-      if (now - lastTap < 280) input.itemPressed = true;
-      lastTap = now;
-      for (const t of e.changedTouches) {
-        if (t.clientX < W * 0.5 && pointerMove == null) {
-          pointerMove = t.identifier;
-          input._ox = t.clientX;
-          input.touchSteer = 0;
-        } else if (pointerAccel == null) {
-          pointerAccel = t.identifier;
-          input._ay = t.clientY;
-          input.touchAccel = 0.8;
-        }
-      }
     },
     { passive: false }
   );
@@ -1372,33 +1500,9 @@
     "touchmove",
     (e) => {
       e.preventDefault();
-      for (const t of e.changedTouches) {
-        if (t.identifier === pointerMove) {
-          input.touchSteer = clamp((t.clientX - input._ox) / 60, -1, 1);
-        }
-        if (t.identifier === pointerAccel) {
-          input.touchAccel = clamp(-(t.clientY - input._ay) / 50, -1, 1);
-          if (Math.abs(input.touchAccel) < 0.2) input.touchAccel = 0.7;
-        }
-      }
     },
     { passive: false }
   );
-  function endTouch(e) {
-    e.preventDefault();
-    for (const t of e.changedTouches) {
-      if (t.identifier === pointerMove) {
-        pointerMove = null;
-        input.touchSteer = 0;
-      }
-      if (t.identifier === pointerAccel) {
-        pointerAccel = null;
-        input.touchAccel = 0;
-      }
-    }
-  }
-  canvas.addEventListener("touchend", endTouch, { passive: false });
-  canvas.addEventListener("touchcancel", endTouch, { passive: false });
 
   btnStart.addEventListener("click", (e) => {
     e.preventDefault();

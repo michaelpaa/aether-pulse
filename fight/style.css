@@ -18,6 +18,9 @@ html, body {
   font-family: "IBM Plex Mono", monospace;
   user-select: none;
   touch-action: none;
+  overscroll-behavior: none;
+  position: fixed;
+  inset: 0;
 }
 
 .back {
@@ -148,24 +151,102 @@ html, body {
 
 .touch {
   position: absolute;
-  left: 0; right: 0; bottom: 12px;
-  z-index: 9;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 12;
   display: flex;
   justify-content: space-between;
-  padding: 0 12px;
+  align-items: flex-end;
+  padding: 10px max(10px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
   gap: 12px;
   pointer-events: none;
 }
-.touch.hidden { display: none; }
-.touch .col { display: flex; gap: 8px; pointer-events: auto; flex-wrap: wrap; max-width: 46%; }
+.touch.hidden { display: none !important; }
+.touch .col {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: none;
+  flex-wrap: nowrap;
+}
+.touch .col.left { align-items: flex-start; }
+.touch .col.right {
+  align-items: flex-end;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 200px;
+}
+.touch .btn-row { display: flex; gap: 8px; }
+
+.joystick {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  touch-action: none;
+}
+.joy-base {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 79, 139, 0.45);
+  background: rgba(20, 8, 16, 0.45);
+}
+.joy-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 52px;
+  height: 52px;
+  margin: -26px 0 0 -26px;
+  border-radius: 50%;
+  background: rgba(255, 79, 139, 0.85);
+  box-shadow: 0 0 16px rgba(255, 79, 139, 0.35);
+}
+.joy-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -18px;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: rgba(247, 238, 242, 0.7);
+}
+
+.mp-btn,
 .touch button {
-  width: 58px;
-  height: 58px;
-  border: 1px solid rgba(255,255,255,0.2);
-  background: rgba(20, 8, 16, 0.7);
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  background: rgba(20, 8, 16, 0.78);
   color: var(--text);
   font-family: "Russo One", sans-serif;
   font-size: 13px;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.mp-btn.punch,
+.touch button.punch {
+  width: 86px;
+  height: 86px;
+  color: #1a0810;
+  background: linear-gradient(180deg, #ff9db8, #ff4f8b);
+  border-color: rgba(255, 79, 139, 0.7);
+}
+.mp-btn.kick,
+.touch button.kick {
+  color: #ffbf3c;
+  border-color: rgba(255, 191, 60, 0.55);
+}
+.mp-btn.special,
+.touch button.special {
+  color: #39e7ff;
+  border-color: rgba(57, 231, 255, 0.55);
 }
 
 .controls-panel {
@@ -232,18 +313,17 @@ html, body {
 }
 .controls-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
 
+@media (pointer: fine) {
+  .touch { display: none !important; }
+}
+@media (pointer: coarse), (max-width: 820px) {
+  .touch:not(.hidden) { display: flex; }
+  .controls-panel { display: none; }
+}
+
 @media (max-width: 720px) {
   .hint { display: none; }
   .mobile-hint { display: block; }
-  .touch:not(.hidden) { display: flex; }
-  .controls-panel {
-    left: 8px;
-    top: auto;
-    bottom: 86px;
-    width: min(160px, 44vw);
-    padding: 8px;
-  }
-  .controls-panel kbd { min-width: 24px; height: 24px; font-size: 10px; }
-  .key-row .gap { width: 24px; height: 24px; }
+  .controls-panel { display: none; }
 }
 

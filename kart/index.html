@@ -2,7 +2,9 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#0b1020" />
   <title>NEON KART RUSH</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -44,7 +46,7 @@
       <div class="menu" id="menu">
         <button id="btn-start" class="cta">RACE</button>
         <p class="hint">A/D lenken · W Gas · S Bremse · Space Drift · E / Klick schießen · Shift Item · 10 Treffer = Slow</p>
-        <p class="hint mobile-hint">Touch: links lenken · rechts Gas · Doppel-Tap Item · mittlerer Tap schießen</p>
+        <p class="hint mobile-hint">Joystick lenken · GAS · BRAKE · DRIFT · FIRE · ITEM</p>
       </div>
       <div class="menu hidden" id="results">
         <div id="result-title" class="result-title">FINISH</div>
@@ -67,6 +69,23 @@
         <li class="note">10 Treffer = Slow</li>
       </ul>
     </aside>
+
+    <div id="mobile-pad" class="mobile-pad hidden" aria-label="Mobile Steuerung">
+      <div class="mp-left">
+        <div id="joy-steer" class="joystick">
+          <div class="joy-base"></div>
+          <div id="joy-knob" class="joy-knob"></div>
+          <span class="joy-label">STEER</span>
+        </div>
+        <button type="button" id="btn-brake" class="mp-btn brake">BRAKE</button>
+      </div>
+      <div class="mp-right">
+        <button type="button" id="btn-item" class="mp-btn item">ITEM</button>
+        <button type="button" id="btn-drift" class="mp-btn drift">DRIFT</button>
+        <button type="button" id="btn-shoot" class="mp-btn shoot">FIRE</button>
+        <button type="button" id="btn-gas" class="mp-btn gas">GAS</button>
+      </div>
+    </div>
   </div>
   <script src="game.js"></script>
 </body>

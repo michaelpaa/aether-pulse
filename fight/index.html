@@ -2,7 +2,9 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#140810" />
   <title>IRON FIST</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -38,24 +40,29 @@
       <div class="menu" id="menu">
         <button id="btn-start" class="cta">FIGHT</button>
         <p class="hint">A/D bewegen · W springen · J Punch · K Kick · L Special · S Block</p>
-        <p class="hint mobile-hint">Buttons unten: bewegen / angreifen / special</p>
+        <p class="hint mobile-hint">Joystick bewegen · P Punch · K Kick · SP Special · JMP / BLK</p>
       </div>
       <div class="menu hidden" id="results">
         <div id="result-title" class="result-title">K.O.</div>
         <button id="btn-retry" class="cta">REMATCH</button>
       </div>
     </div>
-    <div id="touch" class="touch hidden">
-      <div class="col">
-        <button data-act="left">←</button>
-        <button data-act="right">→</button>
-        <button data-act="jump">JMP</button>
+    <div id="touch" class="touch hidden" aria-label="Mobile Steuerung">
+      <div class="col left">
+        <div id="joy-move" class="joystick">
+          <div class="joy-base"></div>
+          <div id="joy-knob" class="joy-knob"></div>
+          <span class="joy-label">MOVE</span>
+        </div>
+        <div class="btn-row">
+          <button type="button" data-act="jump" class="mp-btn">JMP</button>
+          <button type="button" data-act="block" class="mp-btn">BLK</button>
+        </div>
       </div>
-      <div class="col">
-        <button data-act="block">BLK</button>
-        <button data-act="punch">P</button>
-        <button data-act="kick">K</button>
-        <button data-act="special">SP</button>
+      <div class="col right">
+        <button type="button" data-act="special" class="mp-btn special">SP</button>
+        <button type="button" data-act="kick" class="mp-btn kick">K</button>
+        <button type="button" data-act="punch" class="mp-btn punch">P</button>
       </div>
     </div>
 
