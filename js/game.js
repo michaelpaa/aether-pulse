@@ -92,6 +92,16 @@
   function len(x, y) {
     return Math.hypot(x, y);
   }
+  function roundRectPath(c, x, y, w, h, r) {
+    const rr = Math.min(r, w / 2, h / 2);
+    c.beginPath();
+    c.moveTo(x + rr, y);
+    c.arcTo(x + w, y, x + w, y + h, rr);
+    c.arcTo(x + w, y + h, x, y + h, rr);
+    c.arcTo(x, y + h, x, y, rr);
+    c.arcTo(x, y, x + w, y, rr);
+    c.closePath();
+  }
 
   function safeBeep(freq, dur, type, vol, slide) {
     try {
@@ -290,7 +300,7 @@
       itemSpin: 0,
       place: id + 1,
       aiTargetS: 40 + id * 10,
-      aiAggro: 0.7 + id * 0.08,
+      aiAggro: 0.55 + id * 0.06,
       smoke: 0,
     };
   }
@@ -517,10 +527,10 @@
 
     const near = kart._near || nearestOnTrack(kart.x, kart.y);
     const onTrack = Math.abs(near.lat) <= track.halfW;
-    const maxSpeed = (onTrack ? 265 : 120) * (kart.boost > 0 ? 1.35 : 1);
-    const accel = onTrack ? 220 : 90;
-    const brake = 320;
-    const friction = onTrack ? 38 : 110;
+    const maxSpeed = (onTrack ? 290 : 125) * (kart.boost > 0 ? 1.38 : 1);
+    const accel = onTrack ? 260 : 95;
+    const brake = 340;
+    const friction = onTrack ? 32 : 120;
 
     if (accelInput > 0) kart.speed += accel * accelInput * dt;
     if (brakeInput > 0) {
@@ -817,44 +827,72 @@
     if (karts.every((k) => k.finished)) finishRace();
   }
 
-  function drawKart(k, highlight) {
+  function drawKart(k) {
     ctx.save();
     ctx.translate(k.x, k.y);
     ctx.rotate(k.angle);
+
     // shadow
-    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.fillStyle = "rgba(0,0,0,0.4)";
     ctx.beginPath();
-    ctx.ellipse(2, 6, 18, 10, 0, 0, Math.PI * 2);
+    ctx.ellipse(3, 8, 20, 11, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    // wheels
+    ctx.fillStyle = "#1a1f2b";
+    ctx.fillRect(-12, -15, 10, 6);
+    ctx.fillRect(-12, 9, 10, 6);
+    ctx.fillRect(6, -15, 10, 6);
+    ctx.fillRect(6, 9, 10, 6);
+
     // body
     ctx.fillStyle = k.color;
     ctx.strokeStyle = "#0b1020";
     ctx.lineWidth = 2;
+    roundRectPath(ctx, -14, -11, 30, 22, 5);
+    ctx.fill();
+    ctx.stroke();
+
+    // nose
     ctx.beginPath();
-    ctx.moveTo(18, 0);
-    ctx.lineTo(-12, 12);
-    ctx.lineTo(-8, 0);
-    ctx.lineTo(-12, -12);
+    ctx.moveTo(16, -8);
+    ctx.lineTo(24, 0);
+    ctx.lineTo(16, 8);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
+
     // cockpit
-    ctx.fillStyle = "rgba(10,16,32,0.85)";
-    ctx.fillRect(-4, -5, 10, 10);
+    ctx.fillStyle = "rgba(10,16,32,0.9)";
+    roundRectPath(ctx, -2, -6, 12, 12, 3);
+    ctx.fill();
+
+    // number plate vibe
+    ctx.fillStyle = "#f2f7ff";
+    ctx.font = "bold 10px IBM Plex Mono, monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(String(k.id + 1), 4, 3);
+
     // boost flame
-    if (k.boost > 0 || (k.isPlayer && input.accel && Math.abs(k.speed) > 40)) {
+    if (k.boost > 0 || (k.isPlayer && input.accel && Math.abs(k.speed) > 50)) {
+      const flick = 8 + Math.random() * 10 + (k.boost > 0 ? 10 : 0);
       ctx.fillStyle = k.boost > 0 ? "#39e7ff" : "#ffbf3c";
       ctx.beginPath();
-      ctx.moveTo(-12, 0);
-      ctx.lineTo(-20 - (k.boost > 0 ? 10 : 4), 5);
-      ctx.lineTo(-20 - (k.boost > 0 ? 10 : 4), -5);
+      ctx.moveTo(-14, 0);
+      ctx.lineTo(-14 - flick, 6);
+      ctx.lineTo(-14 - flick * 0.7, 0);
+      ctx.lineTo(-14 - flick, -6);
       ctx.closePath();
       ctx.fill();
     }
-    if (highlight) {
-      ctx.strokeStyle = "rgba(255,255,255,0.35)";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(-16, -14, 34, 28);
+
+    // player ring
+    if (k.isPlayer) {
+      ctx.strokeStyle = "rgba(182,255,59,0.55)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, 26, 0, Math.PI * 2);
+      ctx.stroke();
     }
     ctx.restore();
   }
@@ -923,11 +961,33 @@
       }
     }
     ctx.restore();
+
+    // neon roadside lamps
+    for (let i = 0; i < track.pts.length; i += 6) {
+      const p = track.pts[i];
+      const n = track.normals[i];
+      for (const side of [-1, 1]) {
+        const lx = p.x + n.x * (track.halfW + 22) * side;
+        const ly = p.y + n.y * (track.halfW + 22) * side;
+        ctx.fillStyle = side > 0 ? "#39e7ff" : "#ff4f8b";
+        ctx.globalAlpha = 0.85;
+        ctx.beginPath();
+        ctx.arc(lx, ly, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 0.15;
+        ctx.beginPath();
+        ctx.arc(lx, ly, 14, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
   }
 
   function drawWorld() {
     ctx.save();
-    ctx.translate(W / 2, H / 2);
+    ctx.translate(W / 2, H / 2 + 40);
+    const zoom = 1.35;
+    ctx.scale(zoom, zoom);
     ctx.rotate(-camAng - Math.PI / 2);
     ctx.translate(-camX, -camY);
 
@@ -1005,7 +1065,7 @@
       const db = (b.x - camX) * Math.cos(camAng) + (b.y - camY) * Math.sin(camAng);
       return da - db;
     });
-    for (const k of sorted) drawKart(k, k.isPlayer);
+    for (const k of sorted) drawKart(k);
 
     ctx.restore();
   }
@@ -1208,12 +1268,23 @@
 
   btnStart.addEventListener("click", (e) => {
     e.preventDefault();
+    e.stopPropagation();
     startRace();
   });
   btnRetry.addEventListener("click", (e) => {
     e.preventDefault();
+    e.stopPropagation();
     startRace();
   });
+  // backup for stubborn mobile/webview click routing
+  btnStart.onclick = (e) => {
+    e.preventDefault();
+    startRace();
+  };
+  btnRetry.onclick = (e) => {
+    e.preventDefault();
+    startRace();
+  };
 
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
