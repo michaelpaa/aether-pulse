@@ -1,19 +1,19 @@
-# AETHER PULSE
+# NEON KART RUSH
 
-Neon orbital arena shooter — survive the void, chain combos, break the core.
+Mario-Kart-style browser racer: drift, items, AI rivals, minimap, 3 laps.
 
 ## Play
 
-Open `index.html` locally, or visit the GitHub Pages link after deploy.
+https://michaelpaa.github.io/aether-pulse/
 
 ## Controls
 
-- **WASD / Arrows** — move
-- **Mouse** — aim
-- **Click / Space** — fire
-- **Shift** — Pulse (knockback + slow-mo, costs energy)
-- **Touch** — left stick move, right aim/shoot, double-tap Pulse
+- **A/D or ←/→** steer
+- **W/↑** accelerate
+- **S/↓** brake / reverse
+- **Space** drift (release for mini-boost)
+- **Shift** use item
 
-## Stack
+## Items
 
-Static HTML / Canvas / Web Audio — no backend, no server load.
+Boost, shell, banana, lightning — worse place gets better RNG.
