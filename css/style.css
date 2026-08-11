@@ -158,8 +158,9 @@ html, body {
 
 .overlay.playing {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
 }
 
 .brand {
