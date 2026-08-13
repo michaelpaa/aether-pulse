@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#1a1408" />
+  <title>SUPER CHICKEN 3D</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <a class="back" href="../">← ZONE</a>
+  <div id="app">
+    <canvas id="game"></canvas>
+
+    <div id="hud" class="hidden">
+      <div class="hud-top">
+        <div class="pos-block">
+          <div id="place" class="place">1<span>st</span></div>
+          <div class="lap-line">LAP <span id="lap">1</span>/<span id="laps">3</span></div>
+        </div>
+        <div class="timer-block">
+          <div id="timer" class="timer">0:00.000</div>
+          <div id="speed" class="speed">0 km/h</div>
+          <div class="boost-wrap">
+            <div class="boost-bar"><i id="boost"></i></div>
+            <span class="boost-label">BOOST</span>
+          </div>
+        </div>
+        <div class="item-block">
+          <div id="weapon-slot" class="weapon-slot">EGG</div>
+          <div id="weapon-meta" class="item-label">RDY</div>
+        </div>
+      </div>
+      <div id="countdown" class="countdown"></div>
+      <button type="button" id="btn-adult-hud" class="adult-toggle">18+ CHICKENS</button>
+    </div>
+
+    <div id="overlay" class="overlay">
+      <div class="brand">SUPER CHICKEN</div>
+      <div class="brand-sub">3D</div>
+      <p class="tagline">Race. Shoot. Boost. Don't get stuck.</p>
+      <div class="menu" id="menu">
+        <button type="button" id="btn-start" class="cta">RACE</button>
+        <button type="button" id="btn-adult-menu" class="cta adult">18+ UNLOCK ADULT</button>
+        <p class="adult-note" id="adult-status">Standard: Hühner. Adult-Pack nur nach Opt-in.</p>
+        <p class="hint">A/D lenken · W Gas · S Bremse · Space schießen · Q Waffe · Shift / E Boost</p>
+        <p class="hint mobile-hint">Joystick lenken · GAS · BRAKE · BOOST · FIRE · WEAPON</p>
+      </div>
+      <div class="menu hidden" id="results">
+        <div id="result-title" class="result-title">FINISH</div>
+        <ol id="standings" class="standings"></ol>
+        <button type="button" id="btn-retry" class="cta">REMATCH</button>
+      </div>
+    </div>
+
+    <div id="adult-warn" class="adult-warn hidden" role="dialog" aria-modal="true" aria-labelledby="adult-warn-title">
+      <div class="adult-warn-card">
+        <div id="adult-warn-title" class="adult-warn-title">18+ ADULT PACK</div>
+        <p>Stilisierte nackte Erwachsene statt Hühner. Keine Minderjährigen. Kein Foto-Content. Nur Opt-in.</p>
+        <div class="adult-warn-row">
+          <button type="button" id="btn-adult-cancel" class="cta ghost">CANCEL</button>
+          <button type="button" id="btn-adult-confirm" class="cta adult">ENABLE 18+</button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="controls-panel" aria-label="Tastaturbelegung">
+      <div class="controls-title">STEUERUNG</div>
+      <div class="keypad">
+        <div class="key-row"><span class="gap"></span><kbd>W</kbd><span class="gap"></span></div>
+        <div class="key-row"><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></div>
+        <div class="key-caption">Gas · Lenken · Bremse</div>
+      </div>
+      <ul class="controls-list">
+        <li><kbd class="wide">Space</kbd> schießen</li>
+        <li><kbd>Q</kbd> Waffe wechseln</li>
+        <li><kbd class="wide">Shift</kbd> / <kbd>E</kbd> Boost</li>
+      </ul>
+    </aside>
+
+    <div id="mobile-pad" class="mobile-pad hidden" aria-label="Mobile Steuerung">
+      <div class="mp-left">
+        <div id="joy-steer" class="joystick">
+          <div class="joy-base"></div>
+          <div id="joy-knob" class="joy-knob"></div>
+          <span class="joy-label">STEER</span>
+        </div>
+        <button type="button" id="btn-brake" class="mp-btn brake">BRAKE</button>
+      </div>
+      <div class="mp-right">
+        <button type="button" id="btn-weapon" class="mp-btn weapon">WPN</button>
+        <button type="button" id="btn-boost" class="mp-btn boost">BOOST</button>
+        <button type="button" id="btn-shoot" class="mp-btn shoot">FIRE</button>
+        <button type="button" id="btn-gas" class="mp-btn gas">GAS</button>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

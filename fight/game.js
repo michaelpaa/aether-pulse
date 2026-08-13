@@ -129,7 +129,9 @@
   }
 
   function spawnFx(x, y, color, n) {
-    for (let i = 0; i < n; i++) {
+    if (fx.length > 80) fx.splice(0, fx.length - 60);
+    const count = Math.min(n, 24);
+    for (let i = 0; i < count; i++) {
       const a = Math.random() * Math.PI * 2;
       const s = 80 + Math.random() * 220;
       fx.push({
@@ -456,6 +458,13 @@
     f.x += f.vx * dt;
     f.y += f.vy * dt;
 
+    if (!Number.isFinite(f.x) || !Number.isFinite(f.y) || !Number.isFinite(f.vx) || !Number.isFinite(f.vy)) {
+      resetFighter(f, f.isPlayer ? -1 : 1);
+      return;
+    }
+    if (!Number.isFinite(f.stateT) || f.stateT < 0) f.stateT = 0;
+    if (!Number.isFinite(f.stun) || f.stun < 0) f.stun = 0;
+
     const gy = groundY();
     if (f.y >= gy) {
       f.y = gy;
@@ -522,6 +531,7 @@
 
     if (mode === "menu") return;
 
+    if (hitstop > 0.25) hitstop = 0.25;
     if (hitstop > 0) {
       hitstop -= dt;
       return;
@@ -716,12 +726,16 @@
   function frame(now) {
     try {
       const raw = (now - last) / 1000;
-      const dt = raw > 0 && raw < 0.05 ? raw : 0.016;
+      const dt = Number.isFinite(raw) && raw > 0 ? Math.min(raw, 0.033) : 0.016;
       last = now;
       update(dt);
       draw();
     } catch (err) {
       console.error("IRON FIST frame error:", err);
+      try {
+        if (!Number.isFinite(p1.x)) resetFighter(p1, -1);
+        if (!Number.isFinite(p2.x)) resetFighter(p2, 1);
+      } catch (_) {}
     }
     requestAnimationFrame(frame);
   }

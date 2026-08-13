@@ -1,11 +1,11 @@
 :root {
-  --bg: #070b16;
+  --bg: #1a1408;
+  --gold: #ffc43d;
+  --orange: #ff7a1a;
+  --pink: #ff6b9d;
   --cyan: #39e7ff;
-  --pink: #ff4f8b;
-  --lime: #b6ff3b;
-  --amber: #ffbf3c;
-  --text: #f2f7ff;
-  --muted: #8ea0b8;
+  --text: #fff6e8;
+  --muted: #b8a078;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -14,13 +14,13 @@
   position: fixed;
   top: 12px;
   left: 12px;
-  z-index: 20;
+  z-index: 30;
   color: var(--muted);
   text-decoration: none;
   font-size: 12px;
   letter-spacing: 0.08em;
 }
-.back:hover { color: var(--cyan); }
+.back:hover { color: var(--gold); }
 
 html, body {
   width: 100%;
@@ -42,8 +42,8 @@ html, body {
   display: block;
   width: 100%;
   height: 100%;
-  background: #0a1020;
-  cursor: none;
+  background: #5aa6d6;
+  touch-action: none;
 }
 
 #hud {
@@ -52,7 +52,6 @@ html, body {
   pointer-events: none;
   z-index: 3;
 }
-
 #hud.hidden { display: none; }
 
 .hud-top {
@@ -67,16 +66,14 @@ html, body {
   font-family: "Russo One", sans-serif;
   font-size: clamp(42px, 8vw, 72px);
   line-height: 0.9;
-  color: var(--amber);
-  text-shadow: 0 0 24px rgba(255, 191, 60, 0.45);
+  color: var(--gold);
+  text-shadow: 0 0 24px rgba(255, 196, 61, 0.45);
 }
-
 .place span {
   font-size: 0.42em;
   margin-left: 2px;
   color: var(--text);
 }
-
 .lap-line {
   margin-top: 6px;
   letter-spacing: 0.14em;
@@ -85,14 +82,12 @@ html, body {
 }
 
 .timer-block { text-align: center; padding-top: 6px; }
-
 .timer {
   font-family: "Russo One", sans-serif;
   font-size: 22px;
-  color: var(--cyan);
+  color: var(--gold);
   letter-spacing: 0.06em;
 }
-
 .speed {
   margin-top: 4px;
   font-size: 12px;
@@ -100,46 +95,53 @@ html, body {
   letter-spacing: 0.08em;
 }
 
-.speed-row {
+.boost-wrap {
+  margin-top: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
 }
-
-.hit-meter {
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  color: var(--pink);
+.boost-bar {
+  width: min(180px, 36vw);
+  height: 10px;
+  border: 1px solid rgba(255, 196, 61, 0.45);
+  background: rgba(20, 14, 6, 0.7);
+  overflow: hidden;
 }
-
-.item-block { text-align: center; }
-
-.item-slot {
-  width: 64px;
-  height: 64px;
-  border: 2px solid rgba(57, 231, 255, 0.55);
-  background: rgba(8, 14, 28, 0.75);
-  display: grid;
-  place-items: center;
-  font-family: "Russo One", sans-serif;
-  font-size: 28px;
-  color: var(--cyan);
-  box-shadow: 0 0 22px rgba(57, 231, 255, 0.2);
+.boost-bar i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #c07a1a, var(--gold), #fff4c2);
+  box-shadow: 0 0 12px rgba(255, 196, 61, 0.55);
+  transform-origin: left center;
 }
-
-.item-slot.empty { color: var(--muted); opacity: 0.7; }
-.item-slot.spin { animation: itemSpin 0.08s linear infinite; }
-.item-label {
-  margin-top: 6px;
+.boost-label {
   font-size: 10px;
   letter-spacing: 0.2em;
   color: var(--muted);
 }
 
-@keyframes itemSpin {
-  from { filter: hue-rotate(0deg); }
-  to { filter: hue-rotate(90deg); }
+.item-block { text-align: center; }
+.weapon-slot {
+  min-width: 72px;
+  height: 64px;
+  padding: 0 10px;
+  border: 2px solid rgba(255, 196, 61, 0.55);
+  background: rgba(20, 14, 6, 0.75);
+  display: grid;
+  place-items: center;
+  font-family: "Russo One", sans-serif;
+  font-size: 16px;
+  color: var(--gold);
+  box-shadow: 0 0 22px rgba(255, 196, 61, 0.2);
+}
+.item-label {
+  margin-top: 6px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--muted);
 }
 
 .countdown {
@@ -150,24 +152,31 @@ html, body {
   font-family: "Russo One", sans-serif;
   font-size: clamp(64px, 14vw, 140px);
   color: var(--text);
-  text-shadow: 0 0 40px rgba(57, 231, 255, 0.55);
+  text-shadow: 0 0 40px rgba(255, 196, 61, 0.55);
   opacity: 0;
+  pointer-events: none;
 }
-
 .countdown.show { opacity: 1; }
 
-#minimap-wrap {
+.adult-toggle {
   position: absolute;
-  right: 16px;
-  bottom: 16px;
-  width: 140px;
-  height: 140px;
-  border: 2px solid rgba(57, 231, 255, 0.35);
-  background: rgba(6, 10, 22, 0.72);
-  overflow: hidden;
+  top: 14px;
+  right: 14px;
+  z-index: 9;
+  pointer-events: auto;
+  border: 1px solid rgba(255, 107, 157, 0.55);
+  background: rgba(20, 8, 14, 0.82);
+  color: var(--pink);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  padding: 8px 10px;
+  cursor: pointer;
 }
-
-#minimap { display: block; width: 100%; height: 100%; }
+.adult-toggle.on {
+  background: rgba(255, 107, 157, 0.22);
+  color: #fff;
+}
 
 .overlay {
   position: absolute;
@@ -181,11 +190,10 @@ html, body {
   text-align: center;
   padding: 24px;
   background:
-    radial-gradient(ellipse at 50% 30%, rgba(57, 231, 255, 0.12), transparent 42%),
-    radial-gradient(ellipse at 70% 70%, rgba(255, 79, 139, 0.1), transparent 40%),
-    linear-gradient(180deg, rgba(7, 11, 22, 0.55), rgba(7, 11, 22, 0.9));
+    radial-gradient(ellipse at 50% 30%, rgba(255, 196, 61, 0.16), transparent 42%),
+    radial-gradient(ellipse at 70% 70%, rgba(255, 122, 26, 0.12), transparent 40%),
+    linear-gradient(180deg, rgba(26, 20, 8, 0.55), rgba(26, 20, 8, 0.92));
 }
-
 .overlay.playing {
   opacity: 0;
   visibility: hidden;
@@ -196,22 +204,20 @@ html, body {
 
 .brand {
   font-family: "Russo One", sans-serif;
-  font-size: clamp(40px, 9vw, 84px);
-  letter-spacing: 0.06em;
-  color: var(--cyan);
-  text-shadow: 0 0 30px rgba(57, 231, 255, 0.45);
+  font-size: clamp(34px, 8vw, 72px);
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  text-shadow: 0 0 30px rgba(255, 196, 61, 0.45);
   line-height: 0.95;
 }
-
 .brand-sub {
   font-family: "Russo One", sans-serif;
   font-size: clamp(28px, 6vw, 56px);
   letter-spacing: 0.28em;
-  color: var(--pink);
-  text-shadow: 0 0 24px rgba(255, 79, 139, 0.4);
+  color: var(--orange);
+  text-shadow: 0 0 24px rgba(255, 122, 26, 0.4);
   margin-top: 2px;
 }
-
 .tagline {
   margin-top: 14px;
   color: var(--muted);
@@ -221,13 +227,12 @@ html, body {
 }
 
 .menu {
-  margin-top: 34px;
+  margin-top: 28px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
-
 .menu.hidden { display: none; }
 
 .cta {
@@ -236,15 +241,33 @@ html, body {
   letter-spacing: 0.22em;
   border: none;
   cursor: pointer;
-  color: #111;
-  background: linear-gradient(180deg, #d8ff6a, var(--lime));
+  color: #1a1408;
+  background: linear-gradient(180deg, #ffe08a, var(--gold));
   padding: 15px 46px;
-  box-shadow: 0 0 30px rgba(182, 255, 59, 0.35);
+  box-shadow: 0 0 30px rgba(255, 196, 61, 0.35);
   transition: transform 0.12s ease;
 }
-
 .cta:hover { transform: translateY(-2px) scale(1.03); }
 .cta:active { transform: translateY(1px) scale(0.98); }
+.cta.adult {
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  padding: 12px 22px;
+  color: #1a0810;
+  background: linear-gradient(180deg, #ffb3c9, var(--pink));
+  box-shadow: 0 0 24px rgba(255, 107, 157, 0.28);
+}
+.cta.ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid rgba(255, 246, 232, 0.35);
+  box-shadow: none;
+  font-size: 13px;
+  padding: 12px 22px;
+}
+.cta.adult.on {
+  box-shadow: 0 0 0 2px #fff inset, 0 0 28px rgba(255, 107, 157, 0.45);
+}
 
 .hint {
   max-width: 520px;
@@ -252,42 +275,77 @@ html, body {
   font-size: 11px;
   line-height: 1.55;
 }
-
 .mobile-hint { display: none; }
+.adult-note {
+  max-width: 420px;
+  color: var(--pink);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  opacity: 0.9;
+}
 
 .result-title {
   font-family: "Russo One", sans-serif;
   font-size: clamp(34px, 7vw, 56px);
-  color: var(--amber);
+  color: var(--gold);
   letter-spacing: 0.12em;
-  text-shadow: 0 0 24px rgba(255, 191, 60, 0.4);
+  text-shadow: 0 0 24px rgba(255, 196, 61, 0.4);
 }
-
 .standings {
   list-style: none;
   margin: 18px 0 8px;
   min-width: min(360px, 86vw);
   text-align: left;
 }
-
 .standings li {
   display: flex;
   justify-content: space-between;
   gap: 16px;
   padding: 10px 12px;
   margin-bottom: 6px;
-  background: rgba(12, 18, 34, 0.75);
-  border-left: 3px solid var(--cyan);
+  background: rgba(28, 20, 10, 0.75);
+  border-left: 3px solid var(--gold);
   font-size: 13px;
 }
-
 .standings li.you {
-  border-left-color: var(--lime);
-  box-shadow: 0 0 18px rgba(182, 255, 59, 0.15);
+  border-left-color: var(--orange);
+  box-shadow: 0 0 18px rgba(255, 122, 26, 0.15);
 }
-
 .standings .who { color: var(--text); }
 .standings .meta { color: var(--muted); }
+
+.adult-warn {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(10, 6, 4, 0.72);
+  pointer-events: auto;
+}
+.adult-warn.hidden { display: none !important; }
+.adult-warn-card {
+  width: min(420px, 92vw);
+  padding: 22px 20px;
+  background: #1e140c;
+  border: 1px solid rgba(255, 107, 157, 0.45);
+  text-align: center;
+}
+.adult-warn-title {
+  font-family: "Russo One", sans-serif;
+  letter-spacing: 0.12em;
+  color: var(--pink);
+  margin-bottom: 10px;
+}
+.adult-warn-card p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+.adult-warn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
 .controls-panel {
   position: absolute;
@@ -297,19 +355,17 @@ html, body {
   width: min(230px, 44vw);
   padding: 12px 12px 10px;
   pointer-events: none;
-  background: rgba(6, 10, 22, 0.8);
-  border: 1px solid rgba(57, 231, 255, 0.28);
+  background: rgba(20, 14, 6, 0.8);
+  border: 1px solid rgba(255, 196, 61, 0.28);
   backdrop-filter: blur(6px);
 }
-
 .controls-title {
   font-family: "Russo One", sans-serif;
   font-size: 12px;
   letter-spacing: 0.18em;
-  color: var(--cyan);
+  color: var(--gold);
   margin-bottom: 10px;
 }
-
 .keypad { margin-bottom: 10px; }
 .key-row {
   display: flex;
@@ -324,7 +380,6 @@ html, body {
   color: var(--muted);
   margin-top: 4px;
 }
-
 .controls-panel kbd {
   display: inline-flex;
   align-items: center;
@@ -332,16 +387,15 @@ html, body {
   min-width: 28px;
   height: 28px;
   padding: 0 7px;
-  border: 1px solid rgba(57, 231, 255, 0.45);
-  background: rgba(10, 16, 32, 0.95);
+  border: 1px solid rgba(255, 196, 61, 0.45);
+  background: rgba(28, 20, 10, 0.95);
   color: var(--text);
   font-family: "IBM Plex Mono", monospace;
   font-size: 11px;
   font-weight: 700;
-  box-shadow: 0 2px 0 rgba(57, 231, 255, 0.2);
+  box-shadow: 0 2px 0 rgba(255, 196, 61, 0.2);
 }
 .controls-panel kbd.wide { min-width: 54px; }
-
 .controls-list {
   list-style: none;
   display: flex;
@@ -352,14 +406,12 @@ html, body {
   line-height: 1.35;
 }
 .controls-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
-.controls-list .note { color: var(--pink); letter-spacing: 0.04em; }
 
 @media (max-width: 720px) {
   .hint { display: none; }
   .mobile-hint { display: block; }
-  .item-slot { width: 54px; height: 54px; font-size: 22px; }
-  #minimap-wrap { width: 96px; height: 96px; right: 10px; bottom: auto; top: 110px; }
   .controls-panel { display: none; }
+  .adult-toggle { top: 8px; right: 8px; font-size: 9px; padding: 6px 8px; }
 }
 
 .mobile-pad {
@@ -393,27 +445,27 @@ html, body {
 
 .joystick {
   position: relative;
-  width: 118px;
-  height: 118px;
+  width: 110px;
+  height: 110px;
   touch-action: none;
 }
 .joy-base {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 2px solid rgba(57, 231, 255, 0.45);
-  background: rgba(6, 10, 22, 0.45);
+  border: 2px solid rgba(255, 196, 61, 0.45);
+  background: rgba(20, 14, 6, 0.45);
 }
 .joy-knob {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 50px;
-  height: 50px;
-  margin: -25px 0 0 -25px;
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px;
   border-radius: 50%;
-  background: rgba(57, 231, 255, 0.85);
-  box-shadow: 0 0 16px rgba(57, 231, 255, 0.35);
+  background: rgba(255, 196, 61, 0.85);
+  box-shadow: 0 0 16px rgba(255, 196, 61, 0.35);
 }
 .joy-label {
   position: absolute;
@@ -421,40 +473,40 @@ html, body {
   text-align: center;
   font-size: 10px;
   letter-spacing: 0.14em;
-  color: rgba(242, 247, 255, 0.7);
+  color: rgba(255, 246, 232, 0.7);
 }
 
 .mp-btn {
-  width: 68px;
-  height: 68px;
+  width: 62px;
+  height: 62px;
   border-radius: 50%;
   border: 2px solid rgba(255,255,255,0.25);
-  background: rgba(8, 14, 28, 0.75);
-  color: #f2f7ff;
+  background: rgba(28, 20, 10, 0.75);
+  color: #fff6e8;
   font-family: "Russo One", sans-serif;
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: 0.06em;
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
 }
 .mp-btn.gas {
-  width: 84px;
-  height: 84px;
+  width: 78px;
+  height: 78px;
   grid-column: 2;
   grid-row: 2 / span 2;
   align-self: end;
-  color: #111;
-  background: linear-gradient(180deg, #d8ff6a, #b6ff3b);
-  border-color: rgba(182, 255, 59, 0.7);
+  color: #1a1408;
+  background: linear-gradient(180deg, #ffe08a, #ffc43d);
+  border-color: rgba(255, 196, 61, 0.7);
 }
 .mp-btn.shoot {
   border-color: rgba(57, 231, 255, 0.65);
   color: #39e7ff;
 }
-.mp-btn.drift { color: #ffbf3c; border-color: rgba(255, 191, 60, 0.55); }
-.mp-btn.item { color: #ff4f8b; border-color: rgba(255, 79, 139, 0.55); }
-.mp-btn.brake { color: #ff4f8b; }
+.mp-btn.boost { color: #ff7a1a; border-color: rgba(255, 122, 26, 0.55); }
+.mp-btn.weapon { color: #ffc43d; border-color: rgba(255, 196, 61, 0.55); }
+.mp-btn.brake { color: #ff6b9d; }
 .mp-btn:active { transform: scale(0.94); }
 
 @media (pointer: fine) {
@@ -464,10 +516,9 @@ html, body {
   .mobile-pad:not(.hidden) { display: flex; }
   .controls-panel { display: none; }
 }
+
 @media (max-width: 420px) {
   .joystick { width: 92px; height: 92px; }
-  .mp-btn { width: 56px; height: 56px; font-size: 10px; }
-  .mp-btn.gas { width: 70px; height: 70px; }
+  .mp-btn { width: 54px; height: 54px; font-size: 9px; }
+  .mp-btn.gas { width: 68px; height: 68px; }
 }
-
-

@@ -874,6 +874,7 @@
       if (toastTimer <= 0) toastEl.classList.remove("show");
     }
 
+    if (hitstop > 0.25) hitstop = 0.25;
     if (hitstop > 0) {
       hitstop -= dt;
       updateFx(dt * 0.2);
@@ -915,6 +916,14 @@
     player.vy *= damp;
     player.x = clamp(player.x + player.vx * adt, 18, W - 18);
     player.y = clamp(player.y + player.vy * adt, 18, H - 18);
+    player.vx = clamp(player.vx, -520, 520);
+    player.vy = clamp(player.vy, -520, 520);
+    if (!Number.isFinite(player.x) || !Number.isFinite(player.y) || !Number.isFinite(player.vx) || !Number.isFinite(player.vy)) {
+      player.x = W * 0.5;
+      player.y = H * 0.5;
+      player.vx = 0;
+      player.vy = 0;
+    }
 
     const aim = aimPoint();
     player.angle = Math.atan2(aim.y - player.y, aim.x - player.x);
@@ -1196,12 +1205,20 @@
   function frame(now) {
     try {
       const raw = (now - last) / 1000;
-      const dt = raw > 0 && raw < 0.05 ? raw : 0.016;
+      const dt = Number.isFinite(raw) && raw > 0 ? Math.min(raw, 0.033) : 0.016;
       last = now;
       update(dt);
       draw();
     } catch (err) {
       console.error("AETHER PULSE frame error:", err);
+      try {
+        if (!Number.isFinite(player.x) || !Number.isFinite(player.y)) {
+          player.x = W * 0.5;
+          player.y = H * 0.5;
+          player.vx = 0;
+          player.vy = 0;
+        }
+      } catch (_) {}
     }
     requestAnimationFrame(frame);
   }

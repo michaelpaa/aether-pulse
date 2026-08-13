@@ -89,9 +89,12 @@
   function lerp(a, b, t) {
     return a + (b - a) * t;
   }
+  function finite(n) {
+    return Number.isFinite(n);
+  }
   function angNorm(a) {
-    while (a > Math.PI) a -= Math.PI * 2;
-    while (a < -Math.PI) a += Math.PI * 2;
+    if (!finite(a)) return 0;
+    a = ((a + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
     return a;
   }
   function len(x, y) {
@@ -574,6 +577,7 @@
     if (kart.fireCd > 0) kart.fireCd -= dt;
     if (kart.slowTimer > 0) kart.slowTimer -= dt;
 
+    if (!finite(kart.stun) || kart.stun < 0) kart.stun = 0;
     if (kart.stun > 0) {
       kart.stun -= dt;
       kart.speed *= 0.96;
@@ -634,16 +638,40 @@
     kart.x += Math.cos(moveAng) * kart.speed * dt;
     kart.y += Math.sin(moveAng) * kart.speed * dt;
 
-    // soft wall push
+    if (!finite(kart.x) || !finite(kart.y) || !finite(kart.speed) || !finite(kart.angle)) {
+      snapKartToTrack(kart);
+      return;
+    }
+
     const n2 = nearestOnTrack(kart.x, kart.y);
     kart._near = n2;
-    if (Math.abs(n2.lat) > track.halfW + 8) {
-      const push = (Math.abs(n2.lat) - track.halfW) * 0.18;
+    if (Math.abs(n2.lat) > track.halfW) {
+      const extra = Math.abs(n2.lat) - track.halfW;
       const dir = Math.sign(n2.lat) || 1;
-      kart.x -= n2.nx * dir * push;
-      kart.y -= n2.ny * dir * push;
-      kart.speed *= 0.92;
+      kart.x -= n2.nx * dir * extra;
+      kart.y -= n2.ny * dir * extra;
+      kart.speed *= 0.88;
     }
+    if (Math.abs(n2.lat) <= track.halfW + 6 && finite(kart.x)) {
+      kart._safeX = kart.x;
+      kart._safeY = kart.y;
+      kart._safeA = kart.angle;
+      kart._safeS = n2.s;
+    }
+    if (n2.dist > 160 || Math.abs(n2.lat) > track.halfW + 48) snapKartToTrack(kart);
+  }
+
+  function snapKartToTrack(kart) {
+    const s = finite(kart._safeS) ? kart._safeS : kart._near && finite(kart._near.s) ? kart._near.s : 0;
+    const sample = sampleTrack(s);
+    kart.x = sample.x;
+    kart.y = sample.y;
+    kart.angle = Math.atan2(sample.ty, sample.tx);
+    kart.speed = 0;
+    kart.stun = 0;
+    kart.vx = 0;
+    kart.vy = 0;
+    kart._near = nearestOnTrack(kart.x, kart.y);
   }
 
   function updateAI(kart, dt) {
@@ -745,6 +773,10 @@
         }
       }
     }
+
+    if (bananas.length > 16) bananas.splice(0, bananas.length - 16);
+    if (shells.length > 10) shells.splice(0, shells.length - 10);
+    if (shots.length > 40) shots.splice(0, shots.length - 40);
 
     for (let i = bananas.length - 1; i >= 0; i--) {
       const b = bananas[i];
@@ -894,6 +926,24 @@
       updateProgress(k);
     }
     rankKarts();
+    for (let i = 0; i < karts.length; i++) {
+      for (let j = i + 1; j < karts.length; j++) {
+        const a = karts[i];
+        const b = karts[j];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const d = Math.hypot(dx, dy) || 0.001;
+        if (d < 28) {
+          const push = (28 - d) * 0.5;
+          const nx = dx / d;
+          const ny = dy / d;
+          a.x -= nx * push;
+          a.y -= ny * push;
+          b.x += nx * push;
+          b.y += ny * push;
+        }
+      }
+    }
     updateItems(dt);
     updateFx(dt);
 
@@ -1276,12 +1326,15 @@
   function frame(now) {
     try {
       const raw = (now - last) / 1000;
-      const dt = raw > 0 && raw < 0.05 ? raw : 0.016;
+      const dt = Number.isFinite(raw) && raw > 0 ? Math.min(raw, 0.033) : 0.016;
       last = now;
       update(dt);
       draw();
     } catch (err) {
       console.error("NEON KART frame error:", err);
+      try {
+        if (player) snapKartToTrack(player);
+      } catch (_) {}
     }
     requestAnimationFrame(frame);
   }
