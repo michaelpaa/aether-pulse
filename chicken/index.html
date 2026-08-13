@@ -11,13 +11,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=hangfix6" />
+  <link rel="stylesheet" href="style.css?v=mario1" />
 </head>
 <body>
-  <!-- CLUCK_GP_HANGFIX_v6: ENGAGE is in HTML, loader does not cover first paint -->
+  <!-- CLUCK_GP_MARIO1: ENGAGE is in HTML. Original sky-isle course (not Nintendo). -->
   <a class="back" href="../">← ZONE</a>
   <div id="app">
     <canvas id="game"></canvas>
+    <div id="hit-floats" aria-hidden="true"></div>
 
     <div id="loader" class="hidden" hidden aria-hidden="true">
       <div class="load-brand">CLUCK GP</div>
@@ -51,20 +52,32 @@
     </div>
 
     <div id="overlay" class="overlay">
-      <div class="brand">SUPER CHICKEN</div>
-      <div class="brand-sub">CLUCK GP</div>
-      <p class="tagline">Mario-Kart-Hybrid. Echte Modelle. Kein Blob.</p>
-      <div class="menu" id="menu">
-        <button type="button" id="btn-start" class="cta">ENGAGE</button>
-        <button type="button" id="btn-adult-menu" class="cta adult">18+ UNLOCK ADULT</button>
-        <p class="adult-note" id="adult-status">Standard: lustige Hühner. Adult-Pack nur nach Opt-in.</p>
-        <p class="hint">A/D lenken · W Gas · S Bremse · Space schießen · Q Waffe · Shift / E Boost</p>
-        <p class="hint mobile-hint">Joystick lenken · GAS · BRAKE · BOOST · FIRE · WEAPON</p>
+      <div class="overlay-top">
+        <div class="brand">SUPER CHICKEN</div>
+        <div class="brand-sub">CLUCK GP</div>
+        <p class="tagline">Bunte 3D-Inselrunde. Originalkurs. Kein Nintendo.</p>
       </div>
-      <div class="menu hidden" id="results">
-        <div id="result-title" class="result-title">FINISH</div>
-        <ol id="standings" class="standings"></ol>
-        <button type="button" id="btn-retry" class="cta">REMATCH</button>
+      <div class="overlay-card">
+        <div class="menu" id="menu">
+          <div class="cam-panel" id="cam-panel">
+            <label class="cam-zoom-label" for="cam-zoom">ZOOM · Nah / Close ↔ Fern / Far</label>
+            <input type="range" id="cam-zoom" min="0" max="100" value="40" />
+            <div class="cam-modes" role="group" aria-label="Camera">
+              <button type="button" id="btn-cam-chase" class="cam-btn on">CHASE</button>
+              <button type="button" id="btn-cam-fpv" class="cam-btn">FIRST PERSON</button>
+            </div>
+          </div>
+          <button type="button" id="btn-start" class="cta">ENGAGE</button>
+          <button type="button" id="btn-adult-menu" class="cta adult">18+ UNLOCK ADULT</button>
+          <p class="adult-note" id="adult-status">Standard: lustige Hühner. Adult-Pack nur nach Opt-in.</p>
+          <p class="hint">A/D lenken · W Gas · S Bremse · Space schießen · Q Waffe · Shift / E Boost</p>
+          <p class="hint mobile-hint">Joystick lenken · GAS · BRAKE · BOOST · FIRE · WEAPON</p>
+        </div>
+        <div class="menu hidden" id="results">
+          <div id="result-title" class="result-title">FINISH</div>
+          <ol id="standings" class="standings"></ol>
+          <button type="button" id="btn-retry" class="cta">REMATCH</button>
+        </div>
       </div>
     </div>
 
@@ -130,6 +143,6 @@
         if (n) n.textContent = "3D-Engine fehlt (lokal). Seite neu laden.";
       });
   </script>
-  <script type="module" src="game.js?v=hangfix6"></script>
+  <script type="module" src="game.js?v=mario1"></script>
 </body>
 </html>

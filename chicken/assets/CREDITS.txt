@@ -17,5 +17,16 @@ Models
   https://github.com/mrdoob/three.js
 - Adult racers venus/ivy/sienna/lola.glb — original stylized adult meshes for this game (not photoreal, not real people)
 
+Course (original — not Nintendo)
+- Cloud-isle lap, pipes, bricks, coins, ?-crates, rails and jump are original Cluck GP geometry
+  plus CC0 Kenney props. No Super Mario / Nintendo ROMs, tracks, models, music, or textures.
+
+Kenney CC0 (www.kenney.nl) — vendored excerpts under chicken/assets/kenney/
+- Platformer Kit 4.1: pipe, brick, coin-gold, crate-item, flag, star, trees, grass blocks
+- Nature Kit 2.1: pine, palm, rock, flowers, bush, cliff
+- Racing Kit 1.2: checker flag, rail, red barrier, pylon, ramp
+- Car Kit 3.1 karts / cones / item-box (already in assets/karts)
+
 Textures
-- Boot track uses procedural CanvasTexture asphalt + grass generated in JS (no network, no Poly Haven / CDN fetch at first paint)
+- Boot track uses procedural toon materials + small canvases (?-block, checkers, 4px toon ramp)
+  generated in JS after the HTML ENGAGE menu is already visible

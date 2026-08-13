@@ -252,17 +252,87 @@ html, body {
   position: absolute;
   inset: 0;
   z-index: 20;
-  pointer-events: auto;
+  pointer-events: none;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   text-align: center;
-  padding: 24px;
+  padding: 18px 18px 22px;
   background:
-    radial-gradient(ellipse at 50% 30%, rgba(255, 196, 61, 0.16), transparent 42%),
-    radial-gradient(ellipse at 70% 70%, rgba(255, 122, 26, 0.12), transparent 40%),
-    linear-gradient(180deg, rgba(26, 20, 8, 0.55), rgba(26, 20, 8, 0.92));
+    linear-gradient(180deg, rgba(26, 20, 8, 0.18) 0%, rgba(26, 20, 8, 0.08) 38%, rgba(26, 20, 8, 0.78) 100%);
+}
+.overlay-top {
+  pointer-events: none;
+  margin-bottom: auto;
+  padding-top: 28px;
+}
+.overlay-card {
+  pointer-events: auto;
+  width: min(460px, 94vw);
+  padding: 16px 16px 18px;
+  background: rgba(20, 14, 6, 0.82);
+  border: 1px solid rgba(255, 196, 61, 0.32);
+  backdrop-filter: blur(8px);
+}
+.cam-panel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.cam-zoom-label {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--gold);
+  font-family: "Russo One", sans-serif;
+}
+#cam-zoom {
+  width: 100%;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+.cam-modes {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.cam-btn {
+  flex: 1;
+  border: 1px solid rgba(255, 246, 232, 0.28);
+  background: rgba(28, 20, 10, 0.9);
+  color: var(--muted);
+  font-family: "Russo One", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  padding: 10px 8px;
+  cursor: pointer;
+}
+.cam-btn.on {
+  color: #1a1408;
+  background: linear-gradient(180deg, #ffe08a, var(--gold));
+  border-color: var(--gold);
+}
+
+#hit-floats {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  overflow: hidden;
+}
+.hit-cry {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: "Russo One", sans-serif;
+  font-size: clamp(18px, 3.4vw, 32px);
+  color: #ff8ab8;
+  text-shadow: 0 2px 10px #1a0810, 0 0 18px rgba(255, 107, 157, 0.85);
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  opacity: 1;
 }
 .overlay.playing {
   opacity: 0;
@@ -297,7 +367,7 @@ html, body {
 }
 
 .menu {
-  margin-top: 28px;
+  margin-top: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
