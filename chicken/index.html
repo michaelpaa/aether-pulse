@@ -11,19 +11,19 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=hangfix6" />
 </head>
 <body>
-  <!-- CLUCK_GP_HANGFIX_v5 -->
+  <!-- CLUCK_GP_HANGFIX_v6: ENGAGE is in HTML, loader does not cover first paint -->
   <a class="back" href="../">← ZONE</a>
   <div id="app">
     <canvas id="game"></canvas>
 
-    <div id="loader">
+    <div id="loader" class="hidden" hidden aria-hidden="true">
       <div class="load-brand">CLUCK GP</div>
       <div class="load-sub">SUPER CHICKEN 3D</div>
       <div class="load-bar"><i id="load-fill"></i></div>
-      <div id="load-status">Starte Strecke…</div>
+      <div id="load-status">Bereit.</div>
     </div>
 
     <div id="hud" class="hidden">
@@ -54,8 +54,8 @@
       <div class="brand">SUPER CHICKEN</div>
       <div class="brand-sub">CLUCK GP</div>
       <p class="tagline">Mario-Kart-Hybrid. Echte Modelle. Kein Blob.</p>
-      <div class="menu hidden" id="menu">
-        <button type="button" id="btn-start" class="cta">RACE</button>
+      <div class="menu" id="menu">
+        <button type="button" id="btn-start" class="cta">ENGAGE</button>
         <button type="button" id="btn-adult-menu" class="cta adult">18+ UNLOCK ADULT</button>
         <p class="adult-note" id="adult-status">Standard: lustige Hühner. Adult-Pack nur nach Opt-in.</p>
         <p class="hint">A/D lenken · W Gas · S Bremse · Space schießen · Q Waffe · Shift / E Boost</p>
@@ -119,40 +119,17 @@
   }
   </script>
   <script>
-    (function () {
-      var fill = document.getElementById("load-fill");
-      var status = document.getElementById("load-status");
-      var t0 = Date.now();
-      var pulse = setInterval(function () {
-        if (!fill || fill.getAttribute("data-done") === "1") {
-          clearInterval(pulse);
-          return;
-        }
-        if (fill.getAttribute("data-lock") === "1") return;
-        var p = Math.min(0.58, 0.08 + (Date.now() - t0) / 9000 * 0.5);
-        fill.style.width = (p * 100) + "%";
-      }, 120);
-      function engineMissing() {
-        if (window.CLUCK_GP_BUILD) return;
-        if (status && status.getAttribute("data-live") !== "1") {
-          status.textContent = "3D-Engine fehlt (lokal). Seite neu laden.";
-        }
-      }
-      fetch(new URL("vendor/VERSION", document.baseURI).href, { cache: "no-store" })
-        .then(function (r) { if (!r.ok) engineMissing(); })
-        .catch(engineMissing);
-      window.addEventListener("error", function (e) {
-        var src = ((e && e.filename) || "") + " " + ((e && e.message) || "");
-        if (/vendor\/|Failed to fetch dynamically imported module|error loading dynamically imported module/i.test(src)) {
-          engineMissing();
-        }
-      }, true);
-      window.addEventListener("unhandledrejection", function (e) {
-        var msg = String((e && e.reason) || "");
-        if (/Failed to fetch|error loading dynamically imported|404/i.test(msg)) engineMissing();
+    window.CLUCK_ENGAGE_CLICK = false;
+    document.getElementById("btn-start").addEventListener("click", function () {
+      window.CLUCK_ENGAGE_CLICK = true;
+    });
+    fetch(new URL("vendor/VERSION", document.baseURI).href, { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("missing"); })
+      .catch(function () {
+        var n = document.getElementById("adult-status");
+        if (n) n.textContent = "3D-Engine fehlt (lokal). Seite neu laden.";
       });
-    })();
   </script>
-  <script type="module" src="game.js?v=hangfix5"></script>
+  <script type="module" src="game.js?v=hangfix6"></script>
 </body>
 </html>
