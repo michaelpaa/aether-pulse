@@ -1,5 +1,5 @@
 /*
- * SUPER CHICKEN 3D — CLUCK GP  (CLUCK_GP_HANGFIX_v4)
+ * SUPER CHICKEN 3D — CLUCK GP  (CLUCK_GP_HANGFIX_v5)
  *
  * Not a blob racer. Real GLB karts + characters on a closed 3D track.
  *
@@ -10,18 +10,19 @@
  * - Chickensoft mascot GLB (CC BY 4.0) — Thibaud Goiffon / Chickensoft
  * - Kenney Car Kit 3.1 karts/cones/boxes (CC0)
  * - three.js Flamingo/Parrot/Stork (MIT) as track crowd
- * - Poly Haven asphalt + grass (CC0)
+ * - Track: procedural CanvasTexture asphalt + grass (no network at boot)
  * - Adult pack: original stylized adult GLBs (opt-in, not photoreal people)
  *
  * Hang-safe: dt clamp, NaN guards, wall + fall checkpoint, try/catch rAF,
- * 8s asset timeout, procedural fallback, adult pack only after opt-in.
+ * first paint is local-only (procedural track), GLBs swap in after menu,
+ * 1.5s hard showMenu deadline, adult pack only after opt-in.
  */
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { SkeletonUtils } from "three/addons/utils/SkeletonUtils.js";
 
-window.CLUCK_GP_BUILD = "CLUCK_GP_HANGFIX_v4";
-console.log("CLUCK_GP_HANGFIX_v4");
+window.CLUCK_GP_BUILD = "CLUCK_GP_HANGFIX_v5";
+console.log("CLUCK_GP_HANGFIX_v5");
 
 const canvas = document.getElementById("game");
 const overlay = document.getElementById("overlay");
@@ -83,7 +84,7 @@ const KART_FILES = ["kart-oobi.glb", "kart-oodi.glb", "kart-ooli.glb", "kart-oop
 const CHICKEN_TAUNTS = ["BUK-BUK-BOOM!", "EGG ON YOUR FACE", "THAT'S A FOWL", "WINGS UP"];
 const ADULT_TAUNTS = ["NICE TRY", "STILL BEHIND", "HEAT LAP", "DON'T STARE — RACE"];
 const ASSET_TIMEOUT_MS = 8000;
-const BOOT_DEADLINE_MS = 10000;
+const MENU_DEADLINE_MS = 1500;
 
 const assets = {
   chicken: null,
@@ -110,9 +111,11 @@ let adultConfirmed = false;
 let worldTime = 0;
 let tauntTimer = 0;
 let loaded = false;
+let menuShown = false;
 let crowdPlaced = false;
 let adultAssetsPromise = null;
 let crowdAssetsPromise = null;
+let glbAssetsPromise = null;
 
 const input = {
   left: false,
@@ -151,7 +154,6 @@ loadingManager.setURLModifier((url) => {
   return url;
 });
 const gltfLoader = new GLTFLoader(loadingManager);
-const texLoader = new THREE.TextureLoader(loadingManager);
 
 function rand(a, b) {
   return a + Math.random() * (b - a);
@@ -176,6 +178,7 @@ function clampDt(raw) {
 }
 
 function setLoad(p, msg) {
+  if (menuShown) return;
   if (loadFill) {
     loadFill.setAttribute("data-lock", "1");
     loadFill.style.width = clamp(p, 0, 1) * 100 + "%";
@@ -269,6 +272,43 @@ function prepTex(t, repeatX, repeatY) {
   return t;
 }
 
+function makeCanvasTex(draw, size, repeatX, repeatY) {
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  draw(c.getContext("2d"), size);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(repeatX, repeatY);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  t.needsUpdate = true;
+  return t;
+}
+
+function makeAsphaltTex() {
+  return makeCanvasTex((ctx, s) => {
+    ctx.fillStyle = "#4a453c";
+    ctx.fillRect(0, 0, s, s);
+    for (let i = 0; i < 900; i++) {
+      ctx.fillStyle = i % 3 ? "#3a3832" : "#5c584e";
+      ctx.fillRect((Math.random() * s) | 0, (Math.random() * s) | 0, 2, 2);
+    }
+    ctx.fillStyle = "rgba(255,255,255,0.05)";
+    for (let y = 0; y < s; y += 8) ctx.fillRect(0, y, s, 1);
+  }, 64, 18, 1.2);
+}
+
+function makeGrassTex() {
+  return makeCanvasTex((ctx, s) => {
+    ctx.fillStyle = "#3f8a38";
+    ctx.fillRect(0, 0, s, s);
+    for (let i = 0; i < 700; i++) {
+      ctx.fillStyle = i % 2 ? "#2f6b28" : "#4a9a40";
+      ctx.fillRect((Math.random() * s) | 0, (Math.random() * s) | 0, 3, 3);
+    }
+  }, 64, 28, 28);
+}
+
 function loadGLB(url) {
   return withTimeout(ASSET_TIMEOUT_MS, url, async () => {
     const ctrl = new AbortController();
@@ -284,14 +324,6 @@ function loadGLB(url) {
     } finally {
       clearTimeout(abortTimer);
     }
-  });
-}
-
-function loadTex(url) {
-  return withTimeout(ASSET_TIMEOUT_MS, url, () => {
-    return new Promise((resolve, reject) => {
-      texLoader.load(url, resolve, undefined, reject);
-    });
   });
 }
 
@@ -320,21 +352,43 @@ async function runJobs(jobs, progressFrom, progressTo) {
   );
 }
 
-async function loadBootAssets() {
-  const jobs = [
-    ["Huhn", async () => (assets.chicken = await loadGLB("assets/chickens/chickensoft.glb"))],
-    ["Kart 1", async () => (assets.karts[0] = await loadGLB("assets/karts/" + KART_FILES[0]))],
-    ["Kart 2", async () => (assets.karts[1] = await loadGLB("assets/karts/" + KART_FILES[1]))],
-    ["Kart 3", async () => (assets.karts[2] = await loadGLB("assets/karts/" + KART_FILES[2]))],
-    ["Kart 4", async () => (assets.karts[3] = await loadGLB("assets/karts/" + KART_FILES[3]))],
-    ["Cone", async () => (assets.cone = await loadGLB("assets/karts/cone.glb"))],
-    ["Item", async () => (assets.box = await loadGLB("assets/karts/item-box.glb"))],
-    ["Asphalt", async () => (assets.asphalt = prepTex(await loadTex("assets/track/asphalt.jpg"), 18, 1.2))],
-    ["Gras", async () => (assets.grass = prepTex(await loadTex("assets/track/grass.jpg"), 28, 28))],
-  ];
-  setLoad(0.08, "Lade Strecke… Timeout 8s, dann Fallback.");
-  await runJobs(jobs, 0.1, 0.92);
-  setLoad(1, "Ready.");
+function loadGlbAssetsInBackground() {
+  if (glbAssetsPromise) return glbAssetsPromise;
+  glbAssetsPromise = (async () => {
+    try {
+      await runJobs(
+        [
+          ["Huhn", async () => (assets.chicken = await loadGLB("assets/chickens/chickensoft.glb"))],
+          ["Kart 1", async () => (assets.karts[0] = await loadGLB("assets/karts/" + KART_FILES[0]))],
+          ["Kart 2", async () => (assets.karts[1] = await loadGLB("assets/karts/" + KART_FILES[1]))],
+          ["Kart 3", async () => (assets.karts[2] = await loadGLB("assets/karts/" + KART_FILES[2]))],
+          ["Kart 4", async () => (assets.karts[3] = await loadGLB("assets/karts/" + KART_FILES[3]))],
+          ["Cone", async () => (assets.cone = await loadGLB("assets/karts/cone.glb"))],
+          ["Item", async () => (assets.box = await loadGLB("assets/karts/item-box.glb"))],
+        ],
+        1,
+        1
+      );
+      applyBackgroundModels();
+    } finally {
+      loadCrowdAssets();
+    }
+  })().catch((err) => console.warn("CLUCK GP background GLBs skipped:", err));
+  return glbAssetsPromise;
+}
+
+function applyBackgroundModels() {
+  try {
+    for (const r of racers) {
+      if (r.kart) r.root.remove(r.kart);
+      r.kart = makeKart(r.id);
+      r.root.add(r.kart);
+      applySkin(r);
+    }
+    if (mode === "menu" && world) buildWorld();
+  } catch (err) {
+    console.warn("CLUCK GP model swap skipped:", err);
+  }
 }
 
 function loadCrowdAssets() {
@@ -1908,7 +1962,9 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-function showMenuReady() {
+function showMenu() {
+  if (menuShown) return;
+  menuShown = true;
   loaded = true;
   if (loadFill) {
     loadFill.setAttribute("data-done", "1");
@@ -1916,10 +1972,14 @@ function showMenuReady() {
   }
   if (loaderEl) loaderEl.classList.add("hidden");
   if (menu) menu.classList.remove("hidden");
-  syncAdultUi();
+  try {
+    syncAdultUi();
+  } catch (_) {}
 }
 
 function startWorld() {
+  if (!assets.asphalt) assets.asphalt = makeAsphaltTex();
+  if (!assets.grass) assets.grass = makeGrassTex();
   initThree();
   racers.length = 0;
   racers.push(makeRacer(0));
@@ -1927,24 +1987,28 @@ function startWorld() {
   snapCamera(true);
 }
 
-async function boot() {
-  setLoad(0.06, "Lade Strecke… Timeout 8s, dann Fallback.");
+function boot() {
+  setLoad(0.2, "Starte Strecke…");
   try {
-    await Promise.race([
-      loadBootAssets(),
-      sleep(BOOT_DEADLINE_MS).then(() => {
-        console.warn("CLUCK GP boot deadline — continuing with fallbacks");
-      }),
-    ]);
-    setLoad(1, "Ready.");
+    assets.asphalt = makeAsphaltTex();
+    assets.grass = makeGrassTex();
+  } catch (err) {
+    console.warn("CLUCK GP procedural textures failed:", err);
+  }
+  setTimeout(() => {
+    try {
+      showMenu();
+    } catch (err) {
+      console.error("CLUCK GP showMenu deadline failed:", err);
+    }
+  }, MENU_DEADLINE_MS);
+  try {
     startWorld();
-    showMenuReady();
-    loadCrowdAssets();
+    showMenu();
   } catch (err) {
     console.error(err);
     try {
-      startWorld();
-      showMenuReady();
+      showMenu();
     } catch (err2) {
       console.error(err2);
       if (loadStatus) loadStatus.textContent = "3D-Init fehlgeschlagen. Seite neu laden.";
@@ -1955,6 +2019,7 @@ async function boot() {
     last = t;
     requestAnimationFrame(frame);
   });
+  loadGlbAssetsInBackground();
 }
 
 boot();

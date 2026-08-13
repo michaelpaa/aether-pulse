@@ -18,5 +18,4 @@ Models
 - Adult racers venus/ivy/sienna/lola.glb — original stylized adult meshes for this game (not photoreal, not real people)
 
 Textures
-- asphalt_04 1K diffuse — Poly Haven, CC0
-- aerial_grass_rock 1K diffuse — Poly Haven, CC0
+- Boot track uses procedural CanvasTexture asphalt + grass generated in JS (no network, no Poly Haven / CDN fetch at first paint)
