@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- CLUCK_GP_MODEL_PACK_v2 -->
+  <!-- CLUCK_GP_HANGFIX_v3 -->
   <a class="back" href="../">← ZONE</a>
   <div id="app">
     <canvas id="game"></canvas>
@@ -24,7 +24,7 @@
       <div class="load-brand">CLUCK GP</div>
       <div class="load-sub">SUPER CHICKEN 3D</div>
       <div class="load-bar"><i id="load-fill"></i></div>
-      <div id="load-status">Lade echte 3D-Modelle…</div>
+      <div id="load-status">Lade Strecke… Timeout 8s, dann Fallback.</div>
     </div>
 
     <div id="hud" class="hidden">
@@ -119,6 +119,28 @@
     }
   }
   </script>
-  <script type="module" src="game.js"></script>
+  <script>
+    (function () {
+      var fill = document.getElementById("load-fill");
+      var status = document.getElementById("load-status");
+      var t0 = Date.now();
+      var pulse = setInterval(function () {
+        if (!fill || fill.getAttribute("data-done") === "1") {
+          clearInterval(pulse);
+          return;
+        }
+        if (fill.getAttribute("data-lock") === "1") return;
+        var p = Math.min(0.58, 0.08 + (Date.now() - t0) / 9000 * 0.5);
+        fill.style.width = (p * 100) + "%";
+      }, 120);
+      setTimeout(function () {
+        if (window.CLUCK_GP_BUILD) return;
+        if (status && status.getAttribute("data-live") !== "1") {
+          status.textContent = "3D-Engine hängt (CDN). Seite neu laden.";
+        }
+      }, 10000);
+    })();
+  </script>
+  <script type="module" src="game.js?v=hangfix3"></script>
 </body>
 </html>

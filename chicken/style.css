@@ -86,9 +86,10 @@ html, body {
 .load-bar i {
   display: block;
   height: 100%;
-  width: 8%;
+  width: 6%;
   background: linear-gradient(90deg, #c07a1a, var(--gold), #fff4c2);
   transform-origin: left center;
+  transition: width 0.22s ease;
 }
 #load-status {
   color: var(--muted);

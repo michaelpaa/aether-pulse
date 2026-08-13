@@ -1,5 +1,5 @@
 /*
- * SUPER CHICKEN 3D — CLUCK GP  (CLUCK_GP_MODEL_PACK_v2)
+ * SUPER CHICKEN 3D — CLUCK GP  (CLUCK_GP_HANGFIX_v3)
  *
  * Not a blob racer. Real GLB karts + characters on a closed 3D track.
  *
@@ -13,14 +13,15 @@
  * - Poly Haven asphalt + grass (CC0)
  * - Adult pack: original stylized adult GLBs (opt-in, not photoreal people)
  *
- * Hang-safe: dt clamp, NaN guards, wall + fall checkpoint, try/catch rAF.
+ * Hang-safe: dt clamp, NaN guards, wall + fall checkpoint, try/catch rAF,
+ * 8s asset timeout, procedural fallback, adult pack only after opt-in.
  */
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { SkeletonUtils } from "three/addons/utils/SkeletonUtils.js";
 
-window.CLUCK_GP_BUILD = "CLUCK_GP_MODEL_PACK_v2";
-console.log("CLUCK_GP_MODEL_PACK_v2");
+window.CLUCK_GP_BUILD = "CLUCK_GP_HANGFIX_v3";
+console.log("CLUCK_GP_HANGFIX_v3");
 
 const canvas = document.getElementById("game");
 const overlay = document.getElementById("overlay");
@@ -81,6 +82,8 @@ const COLORS = ["#ffc43d", "#39e7ff", "#ff6b9d", "#b6ff3b"];
 const KART_FILES = ["kart-oobi.glb", "kart-oodi.glb", "kart-ooli.glb", "kart-oopi.glb"];
 const CHICKEN_TAUNTS = ["BUK-BUK-BOOM!", "EGG ON YOUR FACE", "THAT'S A FOWL", "WINGS UP"];
 const ADULT_TAUNTS = ["NICE TRY", "STILL BEHIND", "HEAT LAP", "DON'T STARE — RACE"];
+const ASSET_TIMEOUT_MS = 8000;
+const BOOT_DEADLINE_MS = 10000;
 
 const assets = {
   chicken: null,
@@ -107,6 +110,9 @@ let adultConfirmed = false;
 let worldTime = 0;
 let tauntTimer = 0;
 let loaded = false;
+let crowdPlaced = false;
+let adultAssetsPromise = null;
+let crowdAssetsPromise = null;
 
 const input = {
   left: false,
@@ -136,8 +142,16 @@ let renderer = null;
 let world = null;
 let sun = null;
 let speedLines = [];
-const gltfLoader = new GLTFLoader();
-const texLoader = new THREE.TextureLoader();
+const loadingManager = new THREE.LoadingManager();
+loadingManager.setURLModifier((url) => {
+  const clean = String(url || "").split("?")[0];
+  if (/colormap\.png$/i.test(clean)) {
+    return new URL("assets/karts/colormap.png", window.location.href).href;
+  }
+  return url;
+});
+const gltfLoader = new GLTFLoader(loadingManager);
+const texLoader = new THREE.TextureLoader(loadingManager);
 
 function rand(a, b) {
   return a + Math.random() * (b - a);
@@ -162,8 +176,43 @@ function clampDt(raw) {
 }
 
 function setLoad(p, msg) {
-  if (loadFill) loadFill.style.width = clamp(p, 0, 1) * 100 + "%";
-  if (loadStatus && msg) loadStatus.textContent = msg;
+  if (loadFill) {
+    loadFill.setAttribute("data-lock", "1");
+    loadFill.style.width = clamp(p, 0, 1) * 100 + "%";
+  }
+  if (loadStatus && msg) {
+    loadStatus.setAttribute("data-live", "1");
+    loadStatus.textContent = msg;
+  }
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function withTimeout(ms, label, fn) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      reject(new Error("timeout " + ms + "ms: " + label));
+    }, ms);
+    Promise.resolve()
+      .then(fn)
+      .then((value) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch((err) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
 }
 
 function safeBeep(freq, dur, type, vol, slide) {
@@ -221,14 +270,28 @@ function prepTex(t, repeatX, repeatY) {
 }
 
 function loadGLB(url) {
-  return new Promise((resolve, reject) => {
-    gltfLoader.load(url, resolve, undefined, reject);
+  return withTimeout(ASSET_TIMEOUT_MS, url, async () => {
+    const ctrl = new AbortController();
+    const abortTimer = setTimeout(() => ctrl.abort(), ASSET_TIMEOUT_MS);
+    try {
+      const res = await fetch(url, { signal: ctrl.signal });
+      if (!res.ok) throw new Error("HTTP " + res.status + " " + url);
+      const buf = await res.arrayBuffer();
+      const resourcePath = url.slice(0, url.lastIndexOf("/") + 1);
+      return await new Promise((resolve, reject) => {
+        gltfLoader.parse(buf, resourcePath, resolve, reject);
+      });
+    } finally {
+      clearTimeout(abortTimer);
+    }
   });
 }
 
 function loadTex(url) {
-  return new Promise((resolve, reject) => {
-    texLoader.load(url, resolve, undefined, reject);
+  return withTimeout(ASSET_TIMEOUT_MS, url, () => {
+    return new Promise((resolve, reject) => {
+      texLoader.load(url, resolve, undefined, reject);
+    });
   });
 }
 
@@ -236,35 +299,74 @@ async function loadOne(label, fn) {
   try {
     return await fn();
   } catch (err) {
-    console.warn("CLUCK GP asset failed:", label, err);
+    console.warn("CLUCK GP asset failed, using fallback:", label, err);
     return null;
   }
 }
 
-async function loadAllAssets() {
+async function runJobs(jobs, progressFrom, progressTo) {
+  if (!jobs.length) {
+    setLoad(progressTo, "Ready.");
+    return;
+  }
+  let done = 0;
+  await Promise.all(
+    jobs.map(async ([label, fn]) => {
+      setLoad(progressFrom + ((progressTo - progressFrom) * done) / jobs.length, "Lade " + label + "…");
+      await loadOne(label, fn);
+      done += 1;
+      setLoad(progressFrom + ((progressTo - progressFrom) * done) / jobs.length, "Lade " + label + "…");
+    })
+  );
+}
+
+async function loadBootAssets() {
   const jobs = [
     ["Huhn", async () => (assets.chicken = await loadGLB("assets/chickens/chickensoft.glb"))],
     ["Kart 1", async () => (assets.karts[0] = await loadGLB("assets/karts/" + KART_FILES[0]))],
     ["Kart 2", async () => (assets.karts[1] = await loadGLB("assets/karts/" + KART_FILES[1]))],
     ["Kart 3", async () => (assets.karts[2] = await loadGLB("assets/karts/" + KART_FILES[2]))],
     ["Kart 4", async () => (assets.karts[3] = await loadGLB("assets/karts/" + KART_FILES[3]))],
-    ["Venus", async () => (assets.adults[0] = await loadGLB("assets/adults/venus.glb"))],
-    ["Ivy", async () => (assets.adults[1] = await loadGLB("assets/adults/ivy.glb"))],
-    ["Sienna", async () => (assets.adults[2] = await loadGLB("assets/adults/sienna.glb"))],
-    ["Lola", async () => (assets.adults[3] = await loadGLB("assets/adults/lola.glb"))],
-    ["Flamingo", async () => (assets.flamingo = await loadGLB("assets/chickens/flamingo.glb"))],
-    ["Parrot", async () => (assets.parrot = await loadGLB("assets/chickens/parrot.glb"))],
-    ["Stork", async () => (assets.stork = await loadGLB("assets/chickens/stork.glb"))],
     ["Cone", async () => (assets.cone = await loadGLB("assets/karts/cone.glb"))],
     ["Item", async () => (assets.box = await loadGLB("assets/karts/item-box.glb"))],
     ["Asphalt", async () => (assets.asphalt = prepTex(await loadTex("assets/track/asphalt.jpg"), 18, 1.2))],
     ["Gras", async () => (assets.grass = prepTex(await loadTex("assets/track/grass.jpg"), 28, 28))],
   ];
-  for (let i = 0; i < jobs.length; i++) {
-    setLoad((i + 0.15) / jobs.length, "Lade " + jobs[i][0] + "…");
-    await loadOne(jobs[i][0], jobs[i][1]);
-  }
+  setLoad(0.08, "Lade Strecke… Timeout 8s, dann Fallback.");
+  await runJobs(jobs, 0.1, 0.92);
   setLoad(1, "Ready.");
+}
+
+function loadCrowdAssets() {
+  if (crowdAssetsPromise) return crowdAssetsPromise;
+  crowdAssetsPromise = (async () => {
+    await runJobs(
+      [
+        ["Flamingo", async () => (assets.flamingo = await loadGLB("assets/chickens/flamingo.glb"))],
+        ["Parrot", async () => (assets.parrot = await loadGLB("assets/chickens/parrot.glb"))],
+        ["Stork", async () => (assets.stork = await loadGLB("assets/chickens/stork.glb"))],
+      ],
+      1,
+      1
+    );
+    spawnCrowd();
+  })().catch((err) => console.warn("CLUCK GP crowd skipped:", err));
+  return crowdAssetsPromise;
+}
+
+function loadAdultAssets() {
+  if (adultAssetsPromise) return adultAssetsPromise;
+  adultAssetsPromise = runJobs(
+    [
+      ["Venus", async () => (assets.adults[0] = await loadGLB("assets/adults/venus.glb"))],
+      ["Ivy", async () => (assets.adults[1] = await loadGLB("assets/adults/ivy.glb"))],
+      ["Sienna", async () => (assets.adults[2] = await loadGLB("assets/adults/sienna.glb"))],
+      ["Lola", async () => (assets.adults[3] = await loadGLB("assets/adults/lola.glb"))],
+    ],
+    0.2,
+    1
+  );
+  return adultAssetsPromise;
 }
 
 function cloneGltf(gltf) {
@@ -540,6 +642,7 @@ function placeClone(gltf, x, y, z, h, yaw) {
 
 function buildWorld() {
   if (world) scene.remove(world);
+  crowdPlaced = false;
   world = new THREE.Group();
   scene.add(world);
 
@@ -641,7 +744,14 @@ function buildWorld() {
     }
   }
 
+  spawnCrowd();
+}
+
+function spawnCrowd() {
+  if (!world || crowdPlaced) return;
   const birds = [assets.flamingo, assets.parrot, assets.stork];
+  if (!birds.some(Boolean)) return;
+  crowdPlaced = true;
   for (let i = 0; i < 9; i++) {
     const g = birds[i % birds.length];
     if (!g) continue;
@@ -676,7 +786,18 @@ function makeChickenFallback(pack) {
   body.position.set(0, 0.55, 0);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.26, 12, 12), bodyM);
   head.position.set(0, 0.95, 0.32);
-  g.add(body, head);
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.22, 6), mat(0xff9a2e));
+  beak.rotation.x = Math.PI / 2;
+  beak.position.set(0, 0.9, 0.55);
+  const comb = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 6), mat(0xe23d3d));
+  comb.position.set(0, 1.18, 0.28);
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.38, 6), mat(0xe23d3d));
+  tail.rotation.x = -1.1;
+  tail.position.set(0, 0.62, -0.42);
+  g.add(body, head, beak, comb, tail);
+  g.traverse((o) => {
+    if (o.isMesh) o.castShadow = true;
+  });
   return g;
 }
 
@@ -717,6 +838,37 @@ function makeDriver(id, adult) {
   return makeChickenFallback(HEN_PACK[id]);
 }
 
+function makeKartFallback(id) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.28, 1.45), mat(HEN_PACK[id].tint));
+  body.position.y = 0.28;
+  const hood = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.16, 0.5), mat(0x222222));
+  hood.position.set(0, 0.42, -0.35);
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.22, 0.4), mat(0x1a1408));
+  seat.position.set(0, 0.48, 0.12);
+  g.add(body, hood, seat);
+  const wheelM = mat(0x1a1a1a, { roughness: 0.9 });
+  const spots = [
+    [-0.42, 0.42],
+    [0.42, 0.42],
+    [-0.42, -0.48],
+    [0.42, -0.48],
+  ];
+  for (const [x, z] of spots) {
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.14, 10), wheelM);
+    w.rotation.z = Math.PI / 2;
+    w.position.set(x, 0.16, z);
+    g.add(w);
+  }
+  g.traverse((o) => {
+    if (o.isMesh) {
+      o.castShadow = true;
+      o.receiveShadow = true;
+    }
+  });
+  return g;
+}
+
 function makeKart(id) {
   const gltf = assets.karts[id] || assets.karts.find(Boolean);
   if (gltf) {
@@ -727,11 +879,8 @@ function makeKart(id) {
     wrap.rotation.y = Math.PI;
     return wrap;
   }
-  const g = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.28, 1.35), mat(HEN_PACK[id].tint));
-  body.position.y = 0.22;
-  g.add(body);
-  return g;
+  console.warn("CLUCK GP: kart GLB missing — fallback primitive");
+  return makeKartFallback(id);
 }
 
 function applySkin(r) {
@@ -778,10 +927,17 @@ function requestAdultToggle() {
     return;
   }
   if (adultConfirmed) {
-    setAdultMode(true);
+    enableAdultPack();
     return;
   }
   adultWarn.classList.remove("hidden");
+}
+
+async function enableAdultPack() {
+  adultConfirmed = true;
+  if (adultStatus) adultStatus.textContent = "Lade Adult-Pack… Timeout 8s, dann Fallback.";
+  await loadAdultAssets();
+  setAdultMode(true);
 }
 
 function makeRacer(id) {
@@ -1722,8 +1878,7 @@ btnAdultCancel.addEventListener("click", (e) => {
 btnAdultConfirm.addEventListener("click", (e) => {
   e.preventDefault();
   adultWarn.classList.add("hidden");
-  adultConfirmed = true;
-  setAdultMode(true);
+  enableAdultPack();
 });
 window.addEventListener("resize", resize);
 
@@ -1753,22 +1908,48 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
+function showMenuReady() {
+  loaded = true;
+  if (loadFill) {
+    loadFill.setAttribute("data-done", "1");
+    loadFill.style.width = "100%";
+  }
+  if (loaderEl) loaderEl.classList.add("hidden");
+  if (menu) menu.classList.remove("hidden");
+  syncAdultUi();
+}
+
+function startWorld() {
+  initThree();
+  racers.length = 0;
+  racers.push(makeRacer(0));
+  player = racers[0];
+  snapCamera(true);
+}
+
 async function boot() {
+  setLoad(0.06, "Lade Strecke… Timeout 8s, dann Fallback.");
   try {
-    await loadAllAssets();
-    initThree();
-    racers.length = 0;
-    racers.push(makeRacer(0));
-    player = racers[0];
-    snapCamera(true);
-    loaded = true;
-    if (loaderEl) loaderEl.classList.add("hidden");
-    if (menu) menu.classList.remove("hidden");
-    syncAdultUi();
+    await Promise.race([
+      loadBootAssets(),
+      sleep(BOOT_DEADLINE_MS).then(() => {
+        console.warn("CLUCK GP boot deadline — continuing with fallbacks");
+      }),
+    ]);
+    setLoad(1, "Ready.");
+    startWorld();
+    showMenuReady();
+    loadCrowdAssets();
   } catch (err) {
     console.error(err);
-    if (loadStatus) loadStatus.textContent = "3D-Init fehlgeschlagen. Seite neu laden.";
-    if (adultStatus) adultStatus.textContent = "3D-Init fehlgeschlagen. Seite neu laden.";
+    try {
+      startWorld();
+      showMenuReady();
+    } catch (err2) {
+      console.error(err2);
+      if (loadStatus) loadStatus.textContent = "3D-Init fehlgeschlagen. Seite neu laden.";
+      if (adultStatus) adultStatus.textContent = "3D-Init fehlgeschlagen. Seite neu laden.";
+    }
   }
   requestAnimationFrame((t) => {
     last = t;
