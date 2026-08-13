@@ -10,12 +10,11 @@
   <title>CLUCK GP — SUPER CHICKEN 3D</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
   <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- CLUCK_GP_HANGFIX_v3 -->
+  <!-- CLUCK_GP_HANGFIX_v4 -->
   <a class="back" href="../">← ZONE</a>
   <div id="app">
     <canvas id="game"></canvas>
@@ -114,8 +113,8 @@
   <script type="importmap">
   {
     "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"
+      "three": "./vendor/three.module.js",
+      "three/addons/": "./vendor/addons/"
     }
   }
   </script>
@@ -133,14 +132,27 @@
         var p = Math.min(0.58, 0.08 + (Date.now() - t0) / 9000 * 0.5);
         fill.style.width = (p * 100) + "%";
       }, 120);
-      setTimeout(function () {
+      function engineMissing() {
         if (window.CLUCK_GP_BUILD) return;
         if (status && status.getAttribute("data-live") !== "1") {
-          status.textContent = "3D-Engine hängt (CDN). Seite neu laden.";
+          status.textContent = "3D-Engine fehlt (lokal). Seite neu laden.";
         }
-      }, 10000);
+      }
+      fetch(new URL("vendor/VERSION", document.baseURI).href, { cache: "no-store" })
+        .then(function (r) { if (!r.ok) engineMissing(); })
+        .catch(engineMissing);
+      window.addEventListener("error", function (e) {
+        var src = ((e && e.filename) || "") + " " + ((e && e.message) || "");
+        if (/vendor\/|Failed to fetch dynamically imported module|error loading dynamically imported module/i.test(src)) {
+          engineMissing();
+        }
+      }, true);
+      window.addEventListener("unhandledrejection", function (e) {
+        var msg = String((e && e.reason) || "");
+        if (/Failed to fetch|error loading dynamically imported|404/i.test(msg)) engineMissing();
+      });
     })();
   </script>
-  <script type="module" src="game.js?v=hangfix3"></script>
+  <script type="module" src="game.js?v=hangfix4"></script>
 </body>
 </html>

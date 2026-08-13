@@ -1,5 +1,8 @@
 SUPER CHICKEN 3D / CLUCK GP — asset credits
 
+Engine
+- three.js r160.1 (MIT) vendored under chicken/vendor/ — no CDN required at boot
+
 Engine patterns
 - Chase camera pull-back / FOV punch: Three.js vehicle examples + HexGL-style speed offset (patterns only; HexGL CameraChase.js is CC-BY-NC and was not copied)
 - Kart race loop, boost pads, particles: inspired by cconsta1/threejs_car_demo (MIT)

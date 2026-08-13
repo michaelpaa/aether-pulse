@@ -1,0 +1,8 @@
+three@0.160.1
+files:
+  three.module.js
+  addons/loaders/GLTFLoader.js
+  addons/utils/SkeletonUtils.js
+  addons/utils/BufferGeometryUtils.js (GLTFLoader dependency)
+source: https://cdn.jsdelivr.net/npm/three@0.160.1/
+license: MIT

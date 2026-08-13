@@ -1,5 +1,5 @@
 /*
- * SUPER CHICKEN 3D — CLUCK GP  (CLUCK_GP_HANGFIX_v3)
+ * SUPER CHICKEN 3D — CLUCK GP  (CLUCK_GP_HANGFIX_v4)
  *
  * Not a blob racer. Real GLB karts + characters on a closed 3D track.
  *
@@ -20,8 +20,8 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { SkeletonUtils } from "three/addons/utils/SkeletonUtils.js";
 
-window.CLUCK_GP_BUILD = "CLUCK_GP_HANGFIX_v3";
-console.log("CLUCK_GP_HANGFIX_v3");
+window.CLUCK_GP_BUILD = "CLUCK_GP_HANGFIX_v4";
+console.log("CLUCK_GP_HANGFIX_v4");
 
 const canvas = document.getElementById("game");
 const overlay = document.getElementById("overlay");
