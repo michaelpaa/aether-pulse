@@ -7,16 +7,25 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#1a1408" />
-  <title>SUPER CHICKEN 3D</title>
+  <title>CLUCK GP — SUPER CHICKEN 3D</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
   <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- CLUCK_GP_MODEL_PACK_v2 -->
   <a class="back" href="../">← ZONE</a>
   <div id="app">
     <canvas id="game"></canvas>
+
+    <div id="loader">
+      <div class="load-brand">CLUCK GP</div>
+      <div class="load-sub">SUPER CHICKEN 3D</div>
+      <div class="load-bar"><i id="load-fill"></i></div>
+      <div id="load-status">Lade echte 3D-Modelle…</div>
+    </div>
 
     <div id="hud" class="hidden">
       <div class="hud-top">
@@ -38,17 +47,18 @@
         </div>
       </div>
       <div id="countdown" class="countdown"></div>
+      <div id="taunt" class="taunt"></div>
       <button type="button" id="btn-adult-hud" class="adult-toggle">18+ CHICKENS</button>
     </div>
 
     <div id="overlay" class="overlay">
       <div class="brand">SUPER CHICKEN</div>
-      <div class="brand-sub">3D</div>
-      <p class="tagline">Race. Shoot. Boost. Don't get stuck.</p>
-      <div class="menu" id="menu">
+      <div class="brand-sub">CLUCK GP</div>
+      <p class="tagline">Mario-Kart-Hybrid. Echte Modelle. Kein Blob.</p>
+      <div class="menu hidden" id="menu">
         <button type="button" id="btn-start" class="cta">RACE</button>
         <button type="button" id="btn-adult-menu" class="cta adult">18+ UNLOCK ADULT</button>
-        <p class="adult-note" id="adult-status">Standard: Hühner. Adult-Pack nur nach Opt-in.</p>
+        <p class="adult-note" id="adult-status">Standard: lustige Hühner. Adult-Pack nur nach Opt-in.</p>
         <p class="hint">A/D lenken · W Gas · S Bremse · Space schießen · Q Waffe · Shift / E Boost</p>
         <p class="hint mobile-hint">Joystick lenken · GAS · BRAKE · BOOST · FIRE · WEAPON</p>
       </div>
@@ -62,7 +72,7 @@
     <div id="adult-warn" class="adult-warn hidden" role="dialog" aria-modal="true" aria-labelledby="adult-warn-title">
       <div class="adult-warn-card">
         <div id="adult-warn-title" class="adult-warn-title">18+ ADULT PACK</div>
-        <p>Stilisierte nackte Erwachsene statt Hühner. Keine Minderjährigen. Kein Foto-Content. Nur Opt-in.</p>
+        <p>Stilisierte erwachsene Rennfahrerinnen statt Hühner. Keine Minderjährigen. Kein Foto-Content. Nur Opt-in, nicht gespeichert.</p>
         <div class="adult-warn-row">
           <button type="button" id="btn-adult-cancel" class="cta ghost">CANCEL</button>
           <button type="button" id="btn-adult-confirm" class="cta adult">ENABLE 18+</button>
@@ -101,7 +111,14 @@
       </div>
     </div>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js"></script>
-  <script src="game.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="game.js"></script>
 </body>
 </html>

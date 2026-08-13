@@ -1,0 +1,19 @@
+SUPER CHICKEN 3D / CLUCK GP — asset credits
+
+Engine patterns
+- Chase camera pull-back / FOV punch: Three.js vehicle examples + HexGL-style speed offset (patterns only; HexGL CameraChase.js is CC-BY-NC and was not copied)
+- Kart race loop, boost pads, particles: inspired by cconsta1/threejs_car_demo (MIT)
+- Arcade never-stuck track follower: this project (dt clamp, NaN guards, checkpoint reset, try/catch rAF)
+
+Models
+- Chickensoft mascot GLB — Thibaud Goiffon / Chickensoft, CC BY 4.0 (animations CC0)
+  https://github.com/chickensoft-games/Chicken
+- Kenney Car Kit 3.1 karts, cones, item boxes — Kenney.nl, CC0
+  https://kenney.nl/assets/car-kit
+- three.js example Flamingo / Parrot / Stork GLBs — three.js examples, MIT
+  https://github.com/mrdoob/three.js
+- Adult racers venus/ivy/sienna/lola.glb — original stylized adult meshes for this game (not photoreal, not real people)
+
+Textures
+- asphalt_04 1K diffuse — Poly Haven, CC0
+- aerial_grass_rock 1K diffuse — Poly Haven, CC0
