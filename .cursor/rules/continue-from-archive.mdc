@@ -1,0 +1,13 @@
+---
+description: GAMINGZONE weiterbauen — Archiv lesen, nicht neu scaffolden
+alwaysApply: true
+---
+
+# Weiter im bestehenden Projekt
+
+Michael archiviert lange Chats und startet neu. **Lies zuerst `ARCHIVE.md` und `AGENTS.md`.** Nicht von vorne entwickeln.
+
+- Workspace: `/Users/paashooting/aether-pulse` = GitHub `michaelpaa/gamingzone`
+- Live: https://michaelpaa.github.io/gamingzone/
+- Statische Site. Push auf `main` deployt GitHub Pages.
+- Cluck GP (`chicken/`): vendored Three.js, ENGAGE in HTML zuerst, kein Nintendo, 18+ nur Opt-in.

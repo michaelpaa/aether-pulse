@@ -4,6 +4,8 @@ Vier Browser-Spiele. Ein Link.
 
 **https://michaelpaa.github.io/gamingzone/**
 
+Neuer Chat / Projektstand: **[ARCHIVE.md](ARCHIVE.md)** (kurz: [AGENTS.md](AGENTS.md)). Nicht von vorne neu bauen.
+
 1. **AETHER PULSE** — neon arena shooter  
 2. **NEON KART** — drift racer with gun (10 hits = slow)  
 3. **IRON FIST** — Tekken-style best-of-3  
